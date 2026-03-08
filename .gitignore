@@ -1,0 +1,7 @@
+.venv
+__pycache__
+teste.py
+log
+add_language.py
+json/backup
+json/shuffle_index
