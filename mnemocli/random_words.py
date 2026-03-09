@@ -30,7 +30,7 @@ class RandomWords:
         self.shuffle_logic(master_words)
 
     def read_json(self):
-        filepath = Path(f"json/{self.language}.json")
+        filepath = Path(f"languages/{self.language}.json")
         
         # FIX: Auto-generate dummy JSON for testing if it doesn't exist
         if not filepath.exists():
@@ -60,7 +60,7 @@ class RandomWords:
         print(f"Created dummy file at {filepath}")
 
     def shuffle_logic(self, master_words):
-        index_dir = Path("json/shuffle_index")
+        index_dir = Path("shuffle_index")
         index_dir.mkdir(parents=True, exist_ok=True) 
         index_shuffle = index_dir / f"shuffle_index_{self.language}.json"
 

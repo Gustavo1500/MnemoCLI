@@ -3,6 +3,7 @@ import time
 import readchar
 from collections import defaultdict
 
+
 class RandomDrill:
     def __init__(self, amount_loci, set_time_limit=True, standalone=False):
         self.amount_loci = amount_loci
@@ -14,6 +15,12 @@ class RandomDrill:
             self.time_limit = 2 # 2 seconds
         self.start_time = 0
 
+        # Fisher-Yates Shuffle Initialization
+        self.loci_shuffle = list(range(1, self.amount_loci + 1))
+        random.shuffle(self.loci_shuffle)
+
+        print(self.loci_shuffle)
+
         # Logging
         self.missed_loci = defaultdict(int)
         self.time_per_loci = defaultdict(list) # Assign time to each loci, example: Loci 14: times = 1.2, 2.1, 1.7 ...
@@ -21,25 +28,25 @@ class RandomDrill:
         self.episode_count = 0
 
     def generate_number(self):
-
         if self.number is not None:
             self.evaluate()
 
-        self.start_time = 0
+        self.start_time = 0        
+
+        if not self.loci_shuffle:
+            self.loci_shuffle = list(range(1, self.amount_loci + 1))
+            random.shuffle(self.loci_shuffle)
+
+        self.number = self.loci_shuffle.pop()
+
         self.start_time = time.perf_counter()
-
-        prev_num = self.number
-
-        self.number = random.randint(1, self.amount_loci)
-
-        while self.number == prev_num:
-            self.number = random.randint(1, self.amount_loci)
-
-        self.episode_count += 1
 
         return self.number
     
     def evaluate(self):
+        if self.start_time == 0:
+            return
+        
         stop_time = time.perf_counter()
         actual_time = stop_time - self.start_time
 
@@ -54,7 +61,6 @@ class RandomDrill:
             
             if key:
                 self.episode_count += 1
-                self.generate_number()
                 break
 
     def generate_report(self):

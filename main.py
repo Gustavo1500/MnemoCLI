@@ -4,12 +4,12 @@ import time
 import random
 
 # Import all the memory modes
-from random_drill import RandomDrill
-from random_numbers import RandomNumbers
-from random_words import RandomWords
-from palace_rush import PalaceRush
-from pairrun import PairRun
-from normal_run import NormalRun
+from mnemocli.random_drill import RandomDrill
+from mnemocli.random_numbers import RandomNumbers
+from mnemocli.random_words import RandomWords
+from mnemocli.palace_rush import PalaceRush
+from mnemocli.pairrun import PairRun
+from mnemocli.normal_run import NormalRun
 
 
 def parse_args():
@@ -91,6 +91,7 @@ class Session:
                 print(f"\nLOCI: {game.number}")
                 game.user_input()
 
+            game.evaluate()
             game.generate_report()
 
         elif mode_name == "random_numbers":

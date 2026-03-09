@@ -3,5 +3,5 @@ __pycache__
 teste.py
 log
 add_language.py
-json/backup
-json/shuffle_index
+language/backup
+shuffle_index
