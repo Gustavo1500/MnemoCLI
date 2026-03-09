@@ -1,4 +1,5 @@
 # 🏛️ MnemoCLI 🏛️
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 **MnemoCLI** is a minimalist, high-performance command-line mental gymnasium designed to help you master the **Method of Loci** (Memory Palaces). Whether you are a student memorizing for exams, a language learner building vocabulary, or a memory athlete training for a competition, MnemoCLI provides a flexible environment to sharpen your cognitive recall.
 
@@ -90,6 +91,18 @@ python main.py random_words -a 40 -t 0
 ```bash
 python main.py olympic
 ```
+
+---
+
+## ⚖️ License
+
+This project is licensed under the **GNU General Public License v3.0**. 
+
+- **Freedom to modify:** You can change the code however you like.
+- **Freedom to share:** You can redistribute the code.
+- **Stay Open:** If you modify and share this project, your version must also be licensed under the GPL v3.0 (Copyleft).
+
+See the [LICENSE](LICENSE) file for the full legal text.
 
 ---
 
