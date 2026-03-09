@@ -2,7 +2,7 @@ import random
 import time
 import os
 import math
-from rich.console import Console
+from mnemocli.ui import console, clear_screen, header
 from rich.table import Table
 from rich.panel import Panel
 
@@ -10,9 +10,13 @@ class RandomNumbers:
     def __init__(self, amount=10, total_time=5):
         self.total_time = 60 * total_time # Convert minutes to seconds
         self.numbers = [random.randint(0, 9) for _ in range(amount)]
-        self.console = Console()
+
+        self.console = console
 
     def show_numbers(self):
+        clear_screen()
+        header("Random Numbers", f"Memorize {len(self.numbers)} digits")
+        
         ideal_cols = int(math.sqrt(len(self.numbers)))
         num_cols = max(3, (ideal_cols // 3) * 3) 
         

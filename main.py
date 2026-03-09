@@ -2,14 +2,15 @@ import argparse
 import sys
 import time
 import random
+from rich.panel import Panel
 
 # Import all the memory modes
 from mnemocli.random_drill import RandomDrill
 from mnemocli.random_numbers import RandomNumbers
 from mnemocli.random_words import RandomWords
 from mnemocli.palace_rush import PalaceRush
-from mnemocli.pairrun import PairRun
-from mnemocli.normal_run import NormalRun
+from mnemocli.palace_walk import PalaceWalk
+from mnemocli.ui import console, clear_screen, header
 
 
 def parse_args():
@@ -65,53 +66,68 @@ class Session:
         self.current_mode = None
 
     def get_ready(self):
-        print("Get ready!")
-        t = 3
-        for _ in range(3):
+        clear_screen()
+        header("Get Ready!")
+        for i in range(3, 0, -1):
+            console.print(f"[bold yellow]{i}...[/]")
             time.sleep(1)
-            print(t)
-            t -= 1
-
-        time.sleep(0.5)
-        print("GO!")
+        console.print("[bold green]GO![/]")
         time.sleep(0.5)
 
     def run_single_mode(self, mode_name):
         """A dispatcher that handles the execution of any given mode."""
         
-        if mode_name == "random_drill":
+        # 1. Palace Walk Modes (Normal, Even, Odd)
+        if mode_name in ["even_run", "odd_run", "normal_run"]:
+            mode_type = mode_name.replace("_run", "")
+            game = PalaceWalk(loci_amount=self.loci_amount, mode=mode_type)
+            self.get_ready()
+            game.run()
+
+        # 2. Random Drill
+        elif mode_name == "random_drill":
             game = RandomDrill(self.loci_amount, standalone=True)
-            self.current_mode = game
-            print("\n ~ RANDOM DRILL ~")
             self.get_ready()
 
-            # Drill the user exactly the amount of loci they have
-            for _ in range(self.loci_amount):
-                game.generate_number()
-                print(f"\nLOCI: {game.number}")
-                game.user_input()
+            # Clear screen once before starting to get a clean line
+            clear_screen()
+            header("Random Drill", "Visualize the station immediately")
 
-            game.evaluate()
+            for i in range(self.loci_amount):
+                num = game.generate_number()
+                
+                # Use end="\r" to stay on the same line. 
+                # Extra spaces at the end ensure the line is cleared if text gets shorter.
+                console.print(f"   [bold white]Progress: {i+1}/{self.loci_amount}[/] | [bold magenta]TARGET: {num:02d}[/]      ", end="\r")
+                
+                if not game.user_input():
+                    break
+                    
             game.generate_report()
 
+        # 3. Palace Rush
+        elif mode_name in ["palace_rush", "palace_rush_reverse"]:
+            is_reverse = "reverse" in mode_name
+            game = PalaceRush(loci_amount=self.loci_amount, reverse=is_reverse)
+            self.get_ready()
+            game.run()
+
+        # 4. Content Memorization
         elif mode_name == "random_numbers":
             game = RandomNumbers(amount=self.item_amount, total_time=self.time_limit)
-            self.current_mode = game
-            print("\n ~ RANDOM NUMBERS ~")
             self.get_ready()
             game.show_numbers()
 
+        # 5. Random Words
         elif mode_name == "random_words":
             game = RandomWords(amount=self.item_amount, total_time=self.time_limit)
-            self.current_mode = game
-            print("\n ~ RANDOM WORDS ~")
             self.get_ready()
-            
-            if game.random_words: 
+            if game.random_words:
                 game.show_words()
                 game.timer()
                 game.user_input()
 
+        # 6. Palace Rush
         elif mode_name == "palace_rush":
             game = PalaceRush(loci_amount=self.loci_amount)
             self.current_mode = game
@@ -119,18 +135,11 @@ class Session:
             self.get_ready()
             game.run()
             
+        # 7. Palace Rush (Reverse)
         elif mode_name == "palace_rush_reverse":
             game = PalaceRush(loci_amount=self.loci_amount, reverse=True)
             self.current_mode = game
             print("\n ~ PALACE RUSH (REVERSE) ~")
-            self.get_ready()
-            game.run()
-
-        elif mode_name in ["even_run", "odd_run"]:
-            mode_type = "even" if mode_name == "even_run" else "odd"
-            game = PairRun(loci_amount=self.loci_amount, mode=mode_type)
-            self.current_mode = game
-            print(f"\n ~ {mode_type.upper()} RUN ~")
             self.get_ready()
             game.run()
 
@@ -182,47 +191,45 @@ class Session:
     def standard_mode(self):
         start_timer = time.perf_counter()
 
-        # 1. NORMAL RUN
-        print("\n ~ NORMAL RUN ~")
-        game = NormalRun(self.loci_amount)
-        self.get_ready()
-        game.run()
+        # 1. Start with a Normal Run
+        self.run_single_mode("normal_run")
 
-        # 2. RANDOMIZED LOOP
+        # 2. Randomized Loop
         modes = ["random_drill", "palace_rush", "palace_rush_reverse", "even_run", "odd_run"]
 
+        random.shuffle(modes)
+
         while True:
-            # Check total elapsed time BEFORE starting the next round
             elapsed_time = time.perf_counter() - start_timer
-            
             if elapsed_time >= self.session_time_seconds:
-                print("\n" + "="*40)
-                print(f" TIME'S UP! ({(elapsed_time / 60):.2f} minutes elapsed)")
-                print("="*40)
+                console.print(f"\n[bold red]TIME'S UP![/] ({(elapsed_time / 60):.2f} mins elapsed)")
                 break
 
-            user_input = input("\nContinue to next random drill? (y/n): ").strip().lower()
-
-            if user_input == "n":
+            choice = input("\nContinue to next random drill? (y/n): ").strip().lower()
+            if choice == "n":
                 break
+
+            if not modes:
+                modes = random.shuffle(modes)
             
-            # Select and run a random mode
-            random_selection = random.choice(modes)
-            self.run_single_mode(random_selection)
+            self.run_single_mode(modes.pop())
+
 
         self.report(start_timer)
-        
+
     def report(self, start_timer):
-        # Final goodbye/report when exiting standard mode
         total_time = time.perf_counter() - start_timer
         mins, secs = divmod(int(total_time), 60)
         
-        print("\n" + "="*40)
-        print("         STANDARD SESSION COMPLETE")
-        print("="*40)
-        print(f"Total Time Active: {mins}m {secs}s")
-        print("Good Game!")
-        print("="*40 + "\n")
+        console.print("\n")
+        console.print(Panel(
+            f"[bold green]STANDARD SESSION COMPLETE[/]\n"
+            f"Total Time Active: [cyan]{mins}m {secs}s[/]\n"
+            "Great work sharpening your mind!",
+            title="Summary",
+            border_style="green",
+            expand=False
+        ))
 
 
 if __name__ == "__main__":

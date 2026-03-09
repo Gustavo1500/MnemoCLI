@@ -2,7 +2,9 @@ import random
 import time
 import readchar
 from collections import defaultdict
-
+from mnemocli.ui import console, header, clear_screen
+from rich.table import Table
+from rich.panel import Panel
 
 class RandomDrill:
     def __init__(self, amount_loci, set_time_limit=True, standalone=False):
@@ -10,117 +12,102 @@ class RandomDrill:
         self.standalone = standalone
 
         # Time variables
-        self.set_time_limit = set_time_limit
-        if self.set_time_limit:
-            self.time_limit = 2 # 2 seconds
+        self.time_limit = 2 if set_time_limit else 0
         self.start_time = 0
 
         # Fisher-Yates Shuffle Initialization
         self.loci_shuffle = list(range(1, self.amount_loci + 1))
         random.shuffle(self.loci_shuffle)
 
-        print(self.loci_shuffle)
-
         # Logging
         self.missed_loci = defaultdict(int)
-        self.time_per_loci = defaultdict(list) # Assign time to each loci, example: Loci 14: times = 1.2, 2.1, 1.7 ...
+        self.time_per_loci = defaultdict(list)
         self.number = None
         self.episode_count = 0
 
     def generate_number(self):
+        # If this isn't the first run, evaluate the PREVIOUS number
         if self.number is not None:
             self.evaluate()
 
-        self.start_time = 0        
-
+        # Refill shuffle deck if empty
         if not self.loci_shuffle:
             self.loci_shuffle = list(range(1, self.amount_loci + 1))
             random.shuffle(self.loci_shuffle)
 
         self.number = self.loci_shuffle.pop()
-
-        self.start_time = time.perf_counter()
-
+        self.start_time = time.perf_counter() # Start timing NOW
         return self.number
     
     def evaluate(self):
+        """Calculates time taken for the CURRENT self.number"""
         if self.start_time == 0:
             return
         
-        stop_time = time.perf_counter()
-        actual_time = stop_time - self.start_time
-
+        actual_time = time.perf_counter() - self.start_time
         self.time_per_loci[self.number].append(actual_time)
 
-        if actual_time > self.time_limit:
+        if self.time_limit > 0 and actual_time > self.time_limit:
             self.missed_loci[self.number] += 1
 
     def user_input(self):
+        """Wait for user acknowledgment without creating a new line."""
         while True:
             key = readchar.readkey()
             
+            # Handle exit keys
+            if key in ['\x03', '\x1b']: # Ctrl+C or Esc
+                return False
+            
+            # Any other key counts as a "hit"
             if key:
                 self.episode_count += 1
-                break
+                return True
 
     def generate_report(self):
-        # ANSI Color Codes
-        GREEN = '\033[42m'
-        YELLOW = '\033[43m'
-        RED = '\033[41m'
-        GRAY = '\033[100m' # For loci never visited
-        TEXT_DARK = '\033[30m'
-        TEXT_LIGHT = '\033[97m'
-        RESET = '\033[0m'
+        # IMPORTANT: Evaluate the very last number before showing the report
+        self.evaluate()
 
-        print("\n" + "="*40)
-        print("         DRILL HEATMAP REPORT")
-        print("="*40)
+        clear_screen()
+        header("Drill Heatmap Report", f"Target Time: {self.time_limit}s")
         
-        print(f"Legend: {GREEN} Fast {RESET} {YELLOW} Target {RESET} {RED} Slow {RESET} {GRAY} No Data {RESET}")
-        print(f"Target Time: {self.time_limit}s\n")
+        table = Table(show_header=False, padding=(0, 1), box=None, show_edge=False)
+        for _ in range(5): 
+            table.add_column(justify="center")
 
-        # We iterate through the full range of loci to ensure a consistent grid
+        current_row = []
         for i in range(1, self.amount_loci + 1):
             times = self.time_per_loci.get(i)
             
             if not times:
-                # Locus was never visited during the random drill
-                bg_color = GRAY
-                text_color = TEXT_LIGHT
-                display_time = " -- "
+                style, text = "dim white", "--"
             else:
                 avg = sum(times) / len(times)
-                display_time = f"{avg:.1f}s"
-                
-                # Logic to determine color based on target time limit
-                ratio = avg / self.time_limit
-                if ratio < 0.8:
-                    bg_color = GREEN
-                    text_color = TEXT_DARK
-                elif ratio <= 1.2:
-                    bg_color = YELLOW
-                    text_color = TEXT_DARK
-                else:
-                    bg_color = RED
-                    text_color = TEXT_LIGHT
+                text = f"{avg:.1f}s"
+                ratio = avg / self.time_limit if self.time_limit > 0 else 0
+                style = "bold green" if ratio < 0.8 else "bold yellow" if ratio <= 1.2 else "bold red"
 
-            # Print the formatted "tile"
-            # Format: Locus ID on top, Avg time on bottom
-            print(f"{bg_color}{text_color} {i:02d}:{display_time} {RESET}", end=" ")
+            # Create a stylized tile
+            current_row.append(Panel(f"[white]#{i:02d}[/]\n[{style}]{text}[/]", expand=True))
 
-            # Create a new row every 5 items for a grid layout
-            if i % 5 == 0:
-                print("\n")
-
-        print("="*40)
+            if len(current_row) == 5:
+                table.add_row(*current_row)
+                current_row = []
         
-        # Keep the summary stats below the heatmap
-        print("\n- Top 3 Most Missed -")
-        missed_sorted = sorted(self.missed_loci.items(), key=lambda x: x[1], reverse=True)
-        if not missed_sorted:
-            print("No misses recorded!")
-        else:
-            for loci, count in missed_sorted[:3]:
-                print(f"Loci {loci}: {count} misses")
-        print("="*40)
+        # FIX: Handle the "Leftover Row" if loci_amount is not a multiple of 5
+        if current_row:
+            while len(current_row) < 5:
+                current_row.append("") # Fill empty spots
+            table.add_row(*current_row)
+                
+        console.print(table)
+        
+        # Optional: Print top bottlenecks
+        if self.missed_loci:
+            console.print("\n[bold red]Top Bottlenecks (Most Missed):[/]")
+            sorted_missed = sorted(self.missed_loci.items(), key=lambda x: x[1], reverse=True)[:3]
+            for loci, count in sorted_missed:
+                console.print(f" • Loci {loci:02d}: [red]{count} times slow[/]")
+        
+        console.print("\n[dim]Press any key to exit report...[/]")
+        readchar.readkey()

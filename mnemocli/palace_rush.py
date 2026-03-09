@@ -1,9 +1,9 @@
 import time
 import readchar
-from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
+from mnemocli.ui import console, clear_screen, header
 
 class PalaceRush:
     def __init__(self, loci_amount, time_per_loci=2, reverse=False):
@@ -12,9 +12,12 @@ class PalaceRush:
         self.reverse = reverse
         self.current_loci = loci_amount if reverse else 1
         self.time_log = {}
-        self.console = Console()
+        self.console = console
 
     def run(self):
+        clear_screen()
+        header("Palace Rush", "Recall every station as fast as possible")
+
         self.console.print(Panel(f"[bold cyan]Palace Rush Started[/bold cyan]\nLoci: {self.loci_amount} | Target: {self.time_per_loci}s", expand=False))
         
         try:

@@ -7,6 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from mnemocli.ui import console, clear_screen, header
 
 class RandomWords:
     def __init__(self, amount=100, total_time=5, language="portuguese"):
@@ -104,6 +105,9 @@ class RandomWords:
             json.dump(state, f, ensure_ascii=False, indent=4)
 
     def show_words(self):
+        clear_screen()
+        header("Random Words", f"Memorize {len(self.random_words)} words")
+
         if not self.random_words:
             return
             
@@ -121,12 +125,8 @@ class RandomWords:
                 styled_row.extend([""] * (num_cols - len(styled_row)))
             table.add_row(*styled_row)
 
-        self.console.print(
-            Panel(table, title="| Words to Memorize | -> Horizontal -> |", expand=False)
-        )
-        
-        # FIX: Removed self.timer() from here. Methods should do one thing.
-        
+        console.print(Panel(table, title="| Words to Memorize |", expand=False))
+                
     def timer(self):
         for i in range(self.total_time, -1, -1):
             mins, secs = divmod(i, 60)
@@ -137,7 +137,8 @@ class RandomWords:
         # FIX: Removed self.user_input() from here. 
 
     def user_input(self):
-        os.system("clear" if os.name == "posix" else "cls")
+        clear_screen()
+        
         user_answers = []
         ideal_cols = int(math.sqrt(len(self.random_words)))
         num_cols = max(3, (ideal_cols // 3) * 3)
