@@ -5,21 +5,21 @@ import random
 import readchar
 
 # Import all the memory modes
-from mnemocli.random_drill import RandomDrill
-from mnemocli.random_numbers import RandomNumbers
-from mnemocli.random_words import RandomWords
-from mnemocli.palace_rush import PalaceRush
-from mnemocli.palace_walk import PalaceWalk
-from mnemocli.middle_out import MiddleOut
-from mnemocli.ui import console, clear_screen, header, Panel
+from .random_drill import RandomDrill
+from .random_numbers import RandomNumbers
+from .random_words import RandomWords
+from .palace_rush import PalaceRush
+from .palace_walk import PalaceWalk
+from .middle_out import MiddleOut
+from .ui import console, clear_screen, header, Panel
 
 # IMPORT THE CONFIG MANAGER
-from mnemocli.config_manager import load_config
+from .config_manager import load_config
 
 # IMPORT STATS AND GRAPH MANAGERS
-from mnemocli.stats_manager import save_olympic_run
-from mnemocli.stats_manager import show_history_table
-from mnemocli.graph_manager import interactive_graph
+from .stats_manager import save_olympic_run
+from .stats_manager import show_history_table
+from .graph_manager import interactive_graph
 
 # Load configuration globally
 CONFIG = load_config()
@@ -274,7 +274,7 @@ class Session:
         ))
 
 
-if __name__ == "__main__":
+def main():
     try:
         request = parse_args()
         
@@ -292,3 +292,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nSession terminated by user. Goodbye!")
         sys.exit(0)
+
+if __name__ == "__main__":
+    main()

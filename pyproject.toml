@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mnemocli"
+version = "0.1.0"
+authors = [
+  { name="Gustavo1500", email="gugamr2@gmail.com" },
+]
+description = "A minimalist CLI mental gymnasium for the Method of Loci"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "rich>=14.3.3",
+    "readchar>=4.2.1",
+    "plotext>=5.3.2",
+]
+
+[project.scripts]
+mnemocli = "mnemocli.cli:main"
+
+[tool.setuptools]
+# This ensures only the mnemocli folder is treated as the package
+packages = ["mnemocli"]
+
+[tool.setuptools.package-data]
+# This tells setuptools to include the JSON files inside the package
+mnemocli = ["languages/*.json"]

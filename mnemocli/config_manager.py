@@ -15,7 +15,7 @@ default_time = 10
 [StandardMode]
 # Modes that will be randomly shuffled during a 'standard' session.
 # Available options: random_drill, palace_rush, palace_rush_reverse, even_run, odd_run
-included_modes = random_drill, palace_rush, palace_rush_reverse, even_run, odd_run
+included_modes = random_drill, palace_rush, palace_rush_reverse, even_run, odd_run, middle_out
 """
 
 def load_config():

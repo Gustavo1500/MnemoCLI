@@ -27,8 +27,8 @@ class RandomWords:
         self.shuffle_logic(master_words)
 
     def read_json(self):
-        # UPDATED PATH: languages/
-        filepath = Path(f"languages/{self.language}.json")
+        MODULE_ROOT = Path(__file__).resolve().parent
+        filepath = MODULE_ROOT / "languages" / f"{self.language}.json"
         
         if not filepath.exists():
             # If the file is missing, it creates "word_1" etc. 
