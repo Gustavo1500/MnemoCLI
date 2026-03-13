@@ -2,7 +2,7 @@ import random
 import time
 import math
 import readchar
-from mnemocli.ui import console, clear_screen, header
+from .ui import console, clear_screen, header
 from rich.table import Table
 from rich.panel import Panel
 

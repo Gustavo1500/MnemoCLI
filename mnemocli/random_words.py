@@ -4,7 +4,7 @@ import math
 import json
 import readchar
 from pathlib import Path
-from mnemocli.ui import console, clear_screen, header
+from .ui import console, clear_screen, header
 from rich.table import Table
 from rich.panel import Panel
 

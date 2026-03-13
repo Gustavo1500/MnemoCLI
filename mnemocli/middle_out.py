@@ -1,6 +1,6 @@
 import time
 import readchar
-from mnemocli.ui import console, clear_screen, header, Panel
+from .ui import console, clear_screen, header, Panel
 
 class MiddleOut:
     def __init__(self, loci_amount: int):

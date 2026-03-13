@@ -2,7 +2,7 @@ import json
 import datetime
 from pathlib import Path
 from rich.table import Table
-from mnemocli.ui import console
+from .ui import console
 
 DATA_DIR = Path.home() / ".mnemocli" / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)

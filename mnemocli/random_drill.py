@@ -2,7 +2,7 @@ import random
 import time
 import readchar
 from collections import defaultdict
-from mnemocli.ui import console, header, clear_screen
+from .ui import console, header, clear_screen
 from rich.table import Table
 from rich.panel import Panel
 

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import plotext as plt
 import readchar
-from mnemocli.ui import console, clear_screen, header
+from .ui import console, clear_screen, header
 
 # Absolute path resolution to prevent the "working directory" bug
 DATA_DIR = Path.home() / ".mnemocli" / "data"

@@ -3,6 +3,8 @@ import sys
 import time
 import random
 import readchar
+import shutil
+from pathlib import Path
 
 # Import all the memory modes
 from .random_drill import RandomDrill
@@ -31,7 +33,7 @@ def parse_args():
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
         "even_run", "odd_run", "normal_run", "history", "graph",
-        "middle_out"
+        "middle_out", "info", "cleanup"
     ], help="The gamemode you want to play.")
 
     parser.add_argument("--loci_amount", "-la", type=int, 
@@ -164,6 +166,77 @@ class Session:
 
         elif mode_name == "graph":
             interactive_graph()
+
+        elif mode_name == "info":
+            data_path = Path.home() / ".mnemocli"
+            console.print(header("System Info", "Data and Configuration"))
+            console.print(f"• [bold]Version:[/] 0.1.0")
+            console.print(f"• [bold]Data Directory:[/] [cyan]{data_path}[/]")
+            
+            if data_path.exists():
+                size = sum(f.stat().st_size for f in data_path.glob('**/*') if f.is_file())
+                console.print(f"• [bold]Storage Used:[/] {size / 1024:.2f} KB")
+            else:
+                console.print("• [bold]Storage Used:[/] 0 KB (No data yet)")
+
+            console.print("\n[dim]To reset all stats, you can manually delete the folder above.[/]")
+
+        elif mode_name == "cleanup":
+            data_path = Path.home() / ".mnemocli"
+            
+            # 1. Existence Check
+            if not data_path.exists() or not data_path.is_dir():
+                console.print("[yellow]No data folder found to clean.[/]")
+                return
+
+            # 2. String/Parent Safety Locks
+            if data_path.name != ".mnemocli" or Path.home() not in data_path.parents:
+                console.print("[bold red]CRITICAL SAFETY ERROR:[/] Path mismatch. Aborting.")
+                return
+
+            # 3. Gather file info for the preview
+            file_list = list(data_path.rglob("*"))
+            files = [f for f in file_list if f.is_file()]
+            dirs = [d for d in file_list if d.is_dir()]
+
+            # --- CIRCUIT BREAKER ---
+            MAX_FILES, MAX_DIRS = 50, 10
+            if len(files) > MAX_FILES or len(dirs) > MAX_DIRS:
+                console.print(f"[bold red]CIRCUIT BREAKER TRIGGERED![/]")
+                console.print(f"Target contains too many items ({len(files)} files, {len(dirs)} dirs).")
+                console.print("[red]Aborting. Please delete the folder manually for safety.[/]")
+                return
+
+            # 4. Format the names for display
+            # We show just the file names (e.g., 'olympic_history.json') joined by commas
+            file_names = ", ".join([f"[cyan]{f.name}[/]" for f in files]) if files else "[dim]None[/]"
+            dir_names = ", ".join([f"[blue]{d.name}[/]" for d in dirs]) if dirs else "[dim]None[/]"
+
+            clear_screen()
+            header("Data Cleanup", " < Erase Utility >")
+
+            console.print(Panel(
+                f"[bold red]CLEANUP: This action is permanent![/]\n\n"
+                f"The following items will be deleted from [white underline]{data_path}[/]:\n\n"
+                f"[bold white]Files to remove:[/] {file_names}\n"
+                f"[bold white]Folders to remove:[/] {dir_names}\n\n"
+                f"Total items: [bold yellow]{len(files) + len(dirs)}[/]",
+                title="Review Deletion List",
+                border_style="red",
+                expand=False
+            ))
+            
+            # 5. Triple Confirmation
+            confirm = input("\nConfirm (type 'yes'): ").strip()
+            
+            if confirm == "yes":
+                try:
+                    shutil.rmtree(data_path)
+                    console.print("[bold green]✔ All data wiped. MnemoCLI is now fresh.[/]")
+                except Exception as e:
+                    console.print(f"[bold red]OS Error during deletion:[/] {e}")
+            else:
+                console.print("[dim]Names did not match. Deletion aborted.[/]")
 
         elif mode_name == "olympic":
             clear_screen()

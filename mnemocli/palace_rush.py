@@ -3,7 +3,7 @@ import readchar
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
-from mnemocli.ui import console, clear_screen, header
+from .ui import console, clear_screen, header
 
 class PalaceRush:
     def __init__(self, loci_amount, time_per_loci=2, reverse=False):
