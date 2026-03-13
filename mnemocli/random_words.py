@@ -56,10 +56,9 @@ class RandomWords:
             json.dump({f"{self.language}_words": dummy_words}, f, indent=4)
 
     def shuffle_logic(self, master_words):
-        index_dir = Path("data/shuffle_index")
+        index_dir = Path.home() / ".mnemocli" / "data" / "shuffle_index"
         index_dir.mkdir(parents=True, exist_ok=True) 
         index_shuffle = index_dir / f"shuffle_index_{self.language}.json"
-
         master_words = sorted(set(master_words))
         state = {}
 

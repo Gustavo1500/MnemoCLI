@@ -5,8 +5,8 @@ import readchar
 from mnemocli.ui import console, clear_screen, header
 
 # Absolute path resolution to prevent the "working directory" bug
-BASE_DIR = Path(__file__).resolve().parent.parent
-STATS_FILE = BASE_DIR / "data" / "olympic_history.json"
+DATA_DIR = Path.home() / ".mnemocli" / "data"
+STATS_FILE = DATA_DIR / "olympic_history.json"
 
 def interactive_graph():
     # 1. LOAD DATA

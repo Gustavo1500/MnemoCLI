@@ -3,6 +3,9 @@ __pycache__
 teste.py
 log
 add_language.py
-data/shuffle_index/
 config.ini
-data/olympic_history.json
+data
+mnemocli/data
+build/
+dist/
+*.egg-info/

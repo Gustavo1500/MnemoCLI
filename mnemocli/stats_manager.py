@@ -4,7 +4,10 @@ from pathlib import Path
 from rich.table import Table
 from mnemocli.ui import console
 
-STATS_FILE = Path("data/olympic_history.json")
+DATA_DIR = Path.home() / ".mnemocli" / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+STATS_FILE = DATA_DIR / "olympic_history.json"
 
 def save_olympic_run(discipline, allocated_time, actual_time, correct, total):
     """Saves Olympic mode session stats to JSON."""
