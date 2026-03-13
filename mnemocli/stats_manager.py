@@ -1,6 +1,8 @@
 import json
 import datetime
 from pathlib import Path
+from rich.table import Table
+from mnemocli.ui import console
 
 STATS_FILE = Path("data/olympic_history.json")
 
@@ -41,3 +43,39 @@ def save_olympic_run(discipline, allocated_time, actual_time, correct, total):
     # Save to file
     with open(STATS_FILE, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=4)
+
+def show_history_table():
+    """Reads history and prints a formatted table."""
+    if not STATS_FILE.exists():
+        console.print("[yellow]No Olympic history found yet.[/]")
+        return
+
+    with open(STATS_FILE, "r", encoding="utf-8") as f:
+        history = json.load(f)
+
+    table = Table(title="🏆 Olympic Mode History", header_style="bold magenta", border_style="cyan")
+    table.add_column("Run", justify="center")
+    table.add_column("Date", justify="center")
+    table.add_column("Mode", justify="center")
+    table.add_column("Items", justify="center")
+    table.add_column("Time/Item", justify="right")
+    table.add_column("Accuracy", justify="right")
+
+    # Show only the last 10 runs to keep it clean
+    last_runs = list(history.items())[-10:]
+
+    for run_id, data in last_runs:
+        acc = data['accuracy_percent']
+        # Color code accuracy
+        acc_str = f"[green]{acc}%[/]" if acc >= 90 else f"[yellow]{acc}%[/]" if acc >= 70 else f"[red]{acc}%[/]"
+        
+        table.add_row(
+            run_id.replace("RUN_", "#"),
+            data['date'].split(" ")[0], # Just the date
+            data['mode'].capitalize(),
+            str(data['amount']),
+            f"{data['time_per_item_secs']}s",
+            acc_str
+        )
+
+    console.print(table)

@@ -2,6 +2,7 @@ import argparse
 import sys
 import time
 import random
+import readchar
 
 # Import all the memory modes
 from mnemocli.random_drill import RandomDrill
@@ -16,6 +17,7 @@ from mnemocli.config_manager import load_config
 
 # IMPORT STATS MANAGER
 from mnemocli.stats_manager import save_olympic_run
+from mnemocli.stats_manager import show_history_table
 
 # Load configuration globally
 CONFIG = load_config()
@@ -26,7 +28,7 @@ def parse_args():
     parser.add_argument("mode", choices=[
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
-        "even_run", "odd_run", "normal_run"
+        "even_run", "odd_run", "normal_run", "history"
     ], help="The gamemode you want to play.")
 
     parser.add_argument("--loci_amount", "-la", type=int, 
@@ -145,6 +147,12 @@ class Session:
                 game.show_words()
                 game.timer()
                 game.user_input()
+
+        elif mode_name == "history":            
+            clear_screen()
+            show_history_table()
+            console.print("\n[dim]Press any key to exit...[/]")
+            readchar.readkey()
 
         elif mode_name == "olympic":
             clear_screen()
