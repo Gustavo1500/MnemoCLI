@@ -4,4 +4,6 @@ teste.py
 log
 add_language.py
 language/backup
-shuffle_index
+data/shuffle_index/
+config.ini
+data/olympic_history.json
