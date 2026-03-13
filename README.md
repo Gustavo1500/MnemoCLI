@@ -1,4 +1,9 @@
 # 🏛️ MnemoCLI 🏛️
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![PyPI version](https://badge.fury.io/py/mnemocli.svg)](https://badge.fury.io/py/mnemocli)
+
+**MnemoCLI** is a minimalist, high-performance command-line mental gymnasium designed to help you master the **Method of Loci** (Memory Palaces). 
+
 Whether you are a student memorizing for exams, a language learner building vocabulary, or a memory athlete training for a competition, MnemoCLI provides a focused environment to sharpen your cognitive recall and encoding speed.
 
 ---
@@ -90,4 +95,52 @@ mnemocli info
 ```
 
 ---
+
+## ⚙️ Configuration & Data
+
+Upon first run, MnemoCLI creates a hidden directory in your home folder:
+*   **Linux/macOS:** `~/.mnemocli`
+*   **Windows:** `C:\Users\<User>\.mnemocli`
+
+### Customization
+You can edit `~/.mnemocli/config.ini` to change:
+*   Default training language (English/Portuguese).
+*   Default session timers.
+*   Which modes are included in your "Standard" daily workout.
+
+### Data Safety
+To wipe your history and reset the app to factory settings, run:
+```bash
+mnemocli cleanup
+```
+
+---
+
+## 🌐 Language Support
+MnemoCLI includes curated word lists with **2,300+ entries** for:
+- 🇺🇸 🇬🇧 English
+- 🇧🇷 🇵🇹 Portuguese
+
+**Contributions are welcome!** To add a new language, follow the JSON format in the `mnemocli/languages/` folder and submit a Pull Request.
+
+---
+
+## ⚖️ License
+
+This project is licensed under the **GNU General Public License v3.0**. 
+
+- **Freedom to modify:** You can change the code however you like.
+- **Freedom to share:** You can redistribute the code.
+- **Stay Open:** If you modify and share this project, your version must also be licensed under the GPL v3.0 (Copyleft).
+
+See the [LICENSE](LICENSE) file for the full legal text.
+
+---
+
+## 🧩 Contribution & Philosophy
+
+MnemoCLI is built on the belief that a better memory leads to a more organized and creative life. This tool is for everyone—from the casual hobbyist to the competitive pro. 
+
+If you find a bug, have a feature request, or want to contribute a more curated dictionary for any language, please open an issue or submit a pull request.
+
 **I have built this tool to help me master the Method of Loci, and I hope it can help you too. All feedback and contributions are greatly appreciated!**
