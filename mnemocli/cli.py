@@ -6,6 +6,8 @@ import readchar
 import shutil
 from pathlib import Path
 
+from . import __version__
+
 # Import all the memory modes
 from .random_drill import RandomDrill
 from .random_numbers import RandomNumbers
@@ -168,18 +170,49 @@ class Session:
             interactive_graph()
 
         elif mode_name == "info":
+            from . import __version__
+            import json
+            
             data_path = Path.home() / ".mnemocli"
-            console.print(header("System Info", "Data and Configuration"))
-            console.print(f"• [bold]Version:[/] 0.1.0")
-            console.print(f"• [bold]Data Directory:[/] [cyan]{data_path}[/]")
+            config_path = data_path / "config.ini"
+            stats_path = data_path / "data" / "olympic_history.json"
+
+            header("System Dashboard", "Application State & Metrics")
+
+            # 1. Software Info
+            console.print(f"📦 [bold]Version:[/] {__version__}")
+            console.print(f"👤 [bold]Author:[/] Gustavo1500")
+
+            # 2. Active Configuration
+            console.print(f"\n[bold underline]Active Configuration[/]")
+            console.print(f"• [bold]Language:[/] {CONFIG.get('Settings', 'language', fallback='english').capitalize()}")
+            console.print(f"• [bold]Default Session:[/] {CONFIG.getint('Settings', 'default_time', fallback=10)} minutes")
+            
+            # 3. Statistics Summary
+            run_count = 0
+            if stats_path.exists():
+                try:
+                    with open(stats_path, "r", encoding="utf-8") as f:
+                        run_count = len(json.load(f))
+                except Exception:
+                    run_count = "Error reading stats"
+
+            console.print(f"\n[bold underline]Progress Statistics[/]")
+            console.print(f"• [bold]Total Olympic Runs:[/] [green]{run_count}[/]")
+
+            # 4. Storage & Environment
+            console.print(f"\n[bold underline]Environment[/]")
+            console.print(f"• [bold]Config File:[/] [cyan]{config_path}[/]")
             
             if data_path.exists():
                 size = sum(f.stat().st_size for f in data_path.glob('**/*') if f.is_file())
-                console.print(f"• [bold]Storage Used:[/] {size / 1024:.2f} KB")
+                console.print(f"• [bold]Data Directory:[/] [cyan]{data_path}[/]")
+                console.print(f"• [bold]Disk Usage:[/] {size / 1024:.2f} KB")
             else:
                 console.print("• [bold]Storage Used:[/] 0 KB (No data yet)")
 
-            console.print("\n[dim]To reset all stats, you can manually delete the folder above.[/]")
+            # 5. Footer Tip
+            console.print(f"\n[dim]Tip: Use 'mnemocli cleanup' to wipe all history and reset settings.[/]")
 
         elif mode_name == "cleanup":
             data_path = Path.home() / ".mnemocli"
