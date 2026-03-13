@@ -12,6 +12,7 @@ on:
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest
+    environment: pypi
 
     permissions:
       id-token: write     # Required for Trusted Publishing (OIDC)
