@@ -1,6 +1,6 @@
 # 🏛️ MnemoCLI 🏛️
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![PyPI version](https://badge.fury.io/py/mnemocli.svg)](https://badge.fury.io/py/mnemocli)
+[![PyPI version](https://badge.fury.io/py/mnemocli-loci.svg)](https://badge.fury.io/py/mnemocli-loci)
 
 **MnemoCLI** is a minimalist, high-performance command-line mental gymnasium designed to help you master the **Method of Loci** (Memory Palaces). 
 
