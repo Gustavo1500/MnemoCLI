@@ -52,7 +52,7 @@ Ensure you have Python 3.10+ installed. MnemoCLI relies on the following depende
 ### Setup
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/mnemocli.git
+   git clone https://github.com/Gustavo1500/mnemocli.git
    cd mnemocli
    ```
 
