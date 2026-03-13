@@ -1,7 +1,8 @@
 import configparser
 from pathlib import Path
 
-CONFIG_FILE = Path("config.ini")
+BASE_DIR = Path(__file__).resolve().parent.parent 
+CONFIG_FILE = BASE_DIR / "config.ini"
 
 DEFAULT_CONFIG = """[Settings]
 # The language used for Random Words generation.

@@ -15,9 +15,10 @@ from mnemocli.ui import console, clear_screen, header, Panel
 # IMPORT THE CONFIG MANAGER
 from mnemocli.config_manager import load_config
 
-# IMPORT STATS MANAGER
+# IMPORT STATS AND GRAPH MANAGERS
 from mnemocli.stats_manager import save_olympic_run
 from mnemocli.stats_manager import show_history_table
+from mnemocli.graph_manager import interactive_graph
 
 # Load configuration globally
 CONFIG = load_config()
@@ -28,7 +29,7 @@ def parse_args():
     parser.add_argument("mode", choices=[
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
-        "even_run", "odd_run", "normal_run", "history"
+        "even_run", "odd_run", "normal_run", "history", "graph"
     ], help="The gamemode you want to play.")
 
     parser.add_argument("--loci_amount", "-la", type=int, 
@@ -61,7 +62,7 @@ def parse_args():
 
 
 class Session:
-    def __init__(self, loci_amount=None, item_amount=None, time_limit=10):
+    def __init__(self, loci_amount: int | None = None, item_amount: int | None = None, time_limit: int = 10):
         self.loci_amount = loci_amount
         self.item_amount = item_amount
         
@@ -153,6 +154,9 @@ class Session:
             show_history_table()
             console.print("\n[dim]Press any key to exit...[/]")
             readchar.readkey()
+
+        elif mode_name == "graph":
+            interactive_graph()
 
         elif mode_name == "olympic":
             clear_screen()

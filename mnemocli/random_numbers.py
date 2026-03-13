@@ -80,15 +80,17 @@ class RandomNumbers:
             console.print(Panel(table, title="| Enter Numbers |", expand=False))
             console.print(f"\n[dim]Slot {len(user_answers) + 1}/{len(self.numbers)}[/dim] (Press 'Backspace' to delete, 'Esc' to quit)")
             
+            # readkey() captures a single keystroke instantly without waiting for Enter
             key = readchar.readkey()
             
             if key in ['\x03', '\x1b']: # Ctrl+C or Esc
                 break
-            elif key in ['\x08', '\x7f']: # Backspace
+            elif key in ['\x08', '\x7f']: # Backspace (covers both Windows and Mac/Linux)
                 if user_answers:
                     user_answers.pop()
-            elif key.isdigit():
+            elif key in "0123456789": # Strictly only accept single digits 0-9
                 user_answers.append(int(key))
+            # Any other key (letters, symbols, enter) is simply ignored!
 
         # 2. Final Report Screen
         clear_screen()
