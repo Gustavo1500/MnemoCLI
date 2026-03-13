@@ -3,7 +3,6 @@ __pycache__
 teste.py
 log
 add_language.py
-language/backup
 data/shuffle_index/
 config.ini
 data/olympic_history.json
