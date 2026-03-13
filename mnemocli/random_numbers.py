@@ -30,11 +30,10 @@ class RandomNumbers:
             table.add_row(*styled_row)
 
         console.print(Panel(table, title="| Numbers to Memorize | -> Horizontal -> |", expand=False))
-        self.timer()
 
     def timer(self):
         console.print("\n[dim]Press [bold red]Ctrl+C[/] when you are ready to recall.[/dim]")
-        self.start_time = time.perf_counter()
+        start_timestamp = time.perf_counter() # Local start for this specific timing
         
         try:
             for i in range(self.total_time, -1, -1):
@@ -43,12 +42,13 @@ class RandomNumbers:
                 print(f"\rTime remaining: {timer_str}   ", end="", flush=True)
                 time.sleep(1)
         except KeyboardInterrupt:
-            # Safely catch Ctrl+C to skip timer
             pass
-        finally:
-            print("\r" + " " * 30 + "\r", end="", flush=True) 
-            time.sleep(0.2) # Prevent double-taps from bubbling into the input loop
-            self.user_input()
+            
+        elapsed = time.perf_counter() - start_timestamp
+        print("\r" + " " * 30 + "\r", end="", flush=True) 
+        time.sleep(0.2)
+        
+        return elapsed
 
     def user_input(self):
         user_answers = []
@@ -135,3 +135,5 @@ class RandomNumbers:
         
         console.print("[dim]Press any key to return...[/]")
         readchar.readkey()
+        
+        return correct, len(self.numbers)

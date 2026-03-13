@@ -11,11 +11,18 @@ from mnemocli.palace_rush import PalaceRush
 from mnemocli.palace_walk import PalaceWalk
 from mnemocli.ui import console, clear_screen, header, Panel
 
+# IMPORT THE CONFIG MANAGER
+from mnemocli.config_manager import load_config
+
+# IMPORT STATS MANAGER
+from mnemocli.stats_manager import save_olympic_run
+
+# Load configuration globally
+CONFIG = load_config()
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Memory Palace Training CLI")
 
-    # Added "normal_run" so it can be called standalone
     parser.add_argument("mode", choices=[
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
@@ -28,8 +35,10 @@ def parse_args():
     parser.add_argument("--amount", "-a", type=int, 
                         help="Sets the amount of items (Required for random_numbers and random_words).")
 
-    parser.add_argument("--time", "-t", type=int, default=10, 
-                        help="Set time limit in minutes for the session/mode (Default: 10).")
+    # Read default time from config.ini
+    default_time = CONFIG.getint("Settings", "default_time", fallback=10)
+    parser.add_argument("--time", "-t", type=int, default=default_time, 
+                        help=f"Set time limit in minutes (Default from config: {default_time}).")
 
     args = parser.parse_args()
 
@@ -57,12 +66,15 @@ class Session:
         self.time_limit = time_limit 
         self.session_time_seconds = 60 * time_limit 
 
-        self.current_mode = None
+        # Pull Language from config
+        self.language = CONFIG.get("Settings", "language", fallback="english").strip().lower()
+
+        # Pull Standard Modes from config
+        modes_str = CONFIG.get("StandardMode", "included_modes", fallback="random_drill, palace_rush")
+        self.standard_modes = [m.strip() for m in modes_str.split(",") if m.strip()]
 
     def get_ready(self, mode_label):
         clear_screen()
-        
-        # Create a big, obvious announcement of the mode
         announcement = Panel(
             f"[bold yellow]PREPARE FOR:[/]\n[bold cyan]{mode_label.upper()}[/]",
             expand=False,
@@ -72,7 +84,6 @@ class Session:
         console.print(announcement)
         console.print("\n")
 
-        # Countdown
         for i in range(3, 0, -1):
             console.print(f"[bold white]Starting in {i}...[/]")
             time.sleep(1)
@@ -81,7 +92,6 @@ class Session:
         time.sleep(0.5)
 
     def run_single_mode(self, mode_name):
-        # Mapping slugs to friendly display names
         friendly_names = {
             "normal_run": "Normal Palace Walk",
             "even_run": "Even Stations Walk",
@@ -96,14 +106,12 @@ class Session:
 
         label = friendly_names.get(mode_name, "Next Challenge")
 
-        # 1. Palace Walk Modes
         if mode_name in ["even_run", "odd_run", "normal_run"]:
-            self.get_ready(label) # Pass the friendly label
+            self.get_ready(label)
             mode_type = mode_name.replace("_run", "")
             game = PalaceWalk(loci_amount=self.loci_amount, mode=mode_type)
             game.run()
 
-        # 2. Random Drill
         elif mode_name == "random_drill":
             self.get_ready(label)
             game = RandomDrill(self.loci_amount, standalone=True)
@@ -113,35 +121,34 @@ class Session:
                 num = game.generate_number()
                 console.print(f"   [bold white]Progress: {i+1}/{self.loci_amount}[/] | [bold magenta]TARGET: {num:02d}[/]      ", end="\r")
                 if not game.user_input():
+                    console.print("\n[red]Drill aborted.[/]")
                     break
             game.generate_report()
 
-        # 3. Palace Rush
         elif mode_name in ["palace_rush", "palace_rush_reverse"]:
             self.get_ready(label)
             is_reverse = "reverse" in mode_name
             game = PalaceRush(loci_amount=self.loci_amount, reverse=is_reverse)
             game.run()
 
-        # 4. Content Memorization
         elif mode_name == "random_numbers":
             self.get_ready(label)
             game = RandomNumbers(amount=self.item_amount, total_time=self.time_limit)
             game.show_numbers()
+            game.timer()
+            game.user_input()
 
-        # 5. Random Words
         elif mode_name == "random_words":
             self.get_ready(label)
-            game = RandomWords(amount=self.item_amount, total_time=self.time_limit)
+            game = RandomWords(amount=self.item_amount, total_time=self.time_limit, language=self.language)
             if game.random_words:
                 game.show_words()
                 game.timer()
                 game.user_input()
 
-        # 6. Olympic Mode (Now using Rich UI)
         elif mode_name == "olympic":
             clear_screen()
-            header("Olympic Mode", "Standard memory competition events (5 minutes limit)")
+            header("Olympic Mode", "Standard memory competition events")
             
             console.print("Select your difficulty:\n")
             console.print("  1. [bold green]Beginner[/]     (50 items)")
@@ -164,29 +171,53 @@ class Session:
             }
             config = settings[choice]
 
-            # Randomly pick the competition discipline
             discipline = random.choice(["numbers", "words"])
             discipline_label = f"Olympic {discipline.capitalize()}"
-            self.get_ready(discipline_label) # Inform user which discipline was picked
+            self.get_ready(discipline_label)
 
+            # VARIABLES TO HOLD RESULTS
+            actual_time = 0
+            correct = 0
+            total = 0
+
+            # RUN THE SELECTED GAME AND CAPTURE DATA
             if discipline == "numbers":
                 game = RandomNumbers(amount=config["amount"], total_time=config["time"])
                 game.show_numbers()
+                actual_time = game.timer()
+                correct, total = game.user_input()
+                
             else:
-                game = RandomWords(amount=config["amount"], total_time=config["time"])
+                game = RandomWords(amount=config["amount"], total_time=config["time"], language=self.language)
                 if game.random_words:
                     game.show_words()
-                    game.timer()
-                    game.user_input()
+                    actual_time = game.timer()
+                    correct, total = game.user_input()
+
+            # SAVE THE OLYMPIC RUN TO HISTORY
+            if total > 0:
+                save_olympic_run(
+                    discipline=discipline,
+                    allocated_time=config["time"],
+                    actual_time=actual_time,
+                    correct=correct,
+                    total=total
+                )
+                console.print("\n[bold green]Stats Saved successfully to olympic_history.json![/]")
+                time.sleep(1.5)
 
     def standard_mode(self):
         start_timer = time.perf_counter()
 
-        # 1. Start with a Normal Run
         self.run_single_mode("normal_run")
 
-        # 2. Randomized Loop
-        base_modes = ["random_drill", "palace_rush", "palace_rush_reverse", "even_run", "odd_run"]
+        # USE THE MODES DEFINED IN config.ini
+        base_modes = self.standard_modes.copy()
+        
+        # Fallback just in case user deleted all modes from config
+        if not base_modes:
+            base_modes = ["random_drill"] 
+            
         modes = base_modes.copy()
         random.shuffle(modes)
 
@@ -196,12 +227,11 @@ class Session:
                 console.print(f"\n[bold red]TIME'S UP![/] ({(elapsed_time / 60):.2f} mins elapsed)")
                 break
 
-            console.print("\n[dim]Continue to next random drill? (y/n): [/]", end="")
+            console.print("\n[dim]Continue to next drill? (y/n): [/]", end="")
             choice = input().strip().lower()
             if choice == "n":
                 break
 
-            # FIX: Properly refill and shuffle the deck when empty
             if not modes:
                 modes = base_modes.copy()
                 random.shuffle(modes)

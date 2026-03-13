@@ -128,7 +128,7 @@ class RandomWords:
                 
     def timer(self):
         console.print("\n[dim]Press [bold red]Ctrl+C[/] when you are ready to recall.[/dim]")
-        self.start_time = time.perf_counter()
+        start_timestamp = time.perf_counter()
         
         try:
             for i in range(self.total_time, -1, -1):
@@ -138,10 +138,13 @@ class RandomWords:
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
-        finally:
-            print("\r" + " " * 30 + "\r", end="", flush=True)
-            time.sleep(0.2) 
-
+            
+        elapsed = time.perf_counter() - start_timestamp
+        print("\r" + " " * 30 + "\r", end="", flush=True)
+        time.sleep(0.2)
+        
+        return elapsed
+    
     def user_input(self):
         user_answers = []
         ideal_cols = int(math.sqrt(len(self.random_words)))
@@ -222,3 +225,5 @@ class RandomWords:
         
         console.print("[dim]Press any key to return...[/]")
         readchar.readkey()
+        
+        return correct, len(self.random_words)
