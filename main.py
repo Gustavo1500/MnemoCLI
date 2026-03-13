@@ -10,6 +10,7 @@ from mnemocli.random_numbers import RandomNumbers
 from mnemocli.random_words import RandomWords
 from mnemocli.palace_rush import PalaceRush
 from mnemocli.palace_walk import PalaceWalk
+from mnemocli.middle_out import MiddleOut
 from mnemocli.ui import console, clear_screen, header, Panel
 
 # IMPORT THE CONFIG MANAGER
@@ -29,7 +30,8 @@ def parse_args():
     parser.add_argument("mode", choices=[
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
-        "even_run", "odd_run", "normal_run", "history", "graph"
+        "even_run", "odd_run", "normal_run", "history", "graph",
+        "middle_out"
     ], help="The gamemode you want to play.")
 
     parser.add_argument("--loci_amount", "-la", type=int, 
@@ -132,6 +134,11 @@ class Session:
             self.get_ready(label)
             is_reverse = "reverse" in mode_name
             game = PalaceRush(loci_amount=self.loci_amount, reverse=is_reverse)
+            game.run()
+
+        elif mode_name == "middle_out":
+            self.get_ready("Middle-Out Expansion")
+            game = MiddleOut(loci_amount=self.loci_amount)
             game.run()
 
         elif mode_name == "random_numbers":
