@@ -141,6 +141,8 @@ See the [LICENSE](LICENSE) file for the full legal text.
 
 MnemoCLI is built on the belief that a better memory leads to a more organized and creative life. This tool is for everyone—from the casual hobbyist to the competitive pro. 
 
-If you find a bug, have a feature request, or want to contribute a more curated dictionary for any language, please open an issue or submit a pull request.
+**Want to help?** We welcome word-list updates, bug fixes, and new training modes! Please read our [**Contributing Guidelines**](CONTRIBUTING.md) to get started.
+
+If you find a bug or have a feature request, please [open an issue](https://github.com/Gustavo1500/mnemocli/issues).
 
 **I have built this tool to help me master the Method of Loci, and I hope it can help you too. All feedback and contributions are greatly appreciated!**
