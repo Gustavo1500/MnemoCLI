@@ -15,7 +15,7 @@ MnemoCLI requires **Python 3.10+**.
 ### Option A: Stable Release (Recommended)
 Install the latest verified version directly from PyPI:
 ```bash
-pip install mnemocli
+pip install mnemocli-loci
 ```
 
 ### Option B: Bleeding Edge (Development)
