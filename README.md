@@ -27,7 +27,7 @@ pip install git+https://github.com/Gustavo1500/mnemocli.git
 ### 🔄 How to Update
 | Method | Command to Update | Description |
 | :--- | :--- | :--- |
-| **PyPI** | `pip install -U mnemocli` | Updates to the latest **stable** version. |
+| **PyPI** | `pip install -U mnemocli-loci` | Updates to the latest **stable** version. |
 | **GitHub** | `pip install --force-reinstall git+https://github.com/Gustavo1500/mnemocli.git` | Pulls the latest **commit** from the main branch. |
 
 **Note for Linux/macOS users:** If you encounter a "break-system-packages" error, it is recommended to install via `pipx install mnemocli` or use a Python Virtual Environment.
