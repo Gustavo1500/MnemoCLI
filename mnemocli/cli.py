@@ -8,7 +8,6 @@ from pathlib import Path
 
 from . import __version__
 
-# Import all the memory modes
 from .random_drill import RandomDrill
 from .random_numbers import RandomNumbers
 from .random_words import RandomWords
@@ -17,15 +16,10 @@ from .palace_walk import PalaceWalk
 from .middle_out import MiddleOut
 from .ui import console, clear_screen, header, Panel
 
-# IMPORT THE CONFIG MANAGER
 from .config_manager import load_config
-
-# IMPORT STATS AND GRAPH MANAGERS
-from .stats_manager import save_olympic_run
-from .stats_manager import show_history_table
+from .stats_manager import save_olympic_run, show_history_table
 from .graph_manager import interactive_graph
 
-# Load configuration globally
 CONFIG = load_config()
 
 def parse_args():
@@ -44,15 +38,13 @@ def parse_args():
     parser.add_argument("--amount", "-a", type=int, 
                         help="Sets the amount of items (Required for random_numbers and random_words).")
 
-    # Read default time from config.ini
     default_time = CONFIG.getint("Settings", "default_time", fallback=10)
     parser.add_argument("--time", "-t", type=int, default=default_time, 
                         help=f"Set time limit in minutes (Default from config: {default_time}).")
 
     args = parser.parse_args()
 
-    # --- VALIDATION LOGIC ---
-    palace_modes = ["standard", "random_drill", "palace_rush", "palace_rush_reverse", "even_run", "odd_run", "normal_run"]
+    palace_modes = ["standard", "random_drill", "palace_rush", "palace_rush_reverse", "even_run", "odd_run", "normal_run", "middle_out"]
     item_modes = ["random_numbers", "random_words"]
 
     if args.mode in palace_modes and args.loci_amount is None:
@@ -62,7 +54,7 @@ def parse_args():
         if args.loci_amount is not None:
             args.amount = args.loci_amount
         else:
-            parser.error(f"--amount (-a) is required when playing the '{args.mode}' mode.")
+            parser.error(f"--amount (-a) is required when playing the '{args.mode}' mode. Example: -a 20")
 
     return args
 
@@ -75,11 +67,9 @@ class Session:
         self.time_limit = time_limit 
         self.session_time_seconds = 60 * time_limit 
 
-        # Pull Language from config
         self.language = CONFIG.get("Settings", "language", fallback="english").strip().lower()
 
-        # Pull Standard Modes from config
-        modes_str = CONFIG.get("StandardMode", "included_modes", fallback="random_drill, palace_rush")
+        modes_str = CONFIG.get("StandardMode", "included_modes", fallback="random_drill, palace_rush, palace_rush_reverse, even_run, odd_run, middle_out")
         self.standard_modes = [m.strip() for m in modes_str.split(",") if m.strip()]
 
     def get_ready(self, mode_label):
@@ -93,12 +83,16 @@ class Session:
         console.print(announcement)
         console.print("\n")
 
-        for i in range(3, 0, -1):
-            console.print(f"[bold white]Starting in {i}...[/]")
-            time.sleep(1)
-            
-        console.print("[bold green]GO![/]")
-        time.sleep(0.5)
+        try:
+            for i in range(3, 0, -1):
+                console.print(f"[bold white]Starting in {i}...[/]")
+                time.sleep(1)
+                
+            console.print("[bold green]GO![/]")
+            time.sleep(0.5)
+        except KeyboardInterrupt:
+            console.print("\n[red]Start interrupted.[/]")
+            sys.exit(0)
 
     def run_single_mode(self, mode_name):
         friendly_names = {
@@ -110,7 +104,8 @@ class Session:
             "palace_rush_reverse": "Palace Rush (Reverse)",
             "random_numbers": "Random Numbers",
             "random_words": "Random Words",
-            "olympic": "Olympic Competition"
+            "olympic": "Olympic Competition",
+            "middle_out": "Middle-Out Expansion"
         }
 
         label = friendly_names.get(mode_name, "Next Challenge")
@@ -141,7 +136,7 @@ class Session:
             game.run()
 
         elif mode_name == "middle_out":
-            self.get_ready("Middle-Out Expansion")
+            self.get_ready(label)
             game = MiddleOut(loci_amount=self.loci_amount)
             game.run()
 
@@ -164,13 +159,15 @@ class Session:
             clear_screen()
             show_history_table()
             console.print("\n[dim]Press any key to exit...[/]")
-            readchar.readkey()
+            try:
+                readchar.readkey()
+            except KeyboardInterrupt:
+                pass
 
         elif mode_name == "graph":
             interactive_graph()
 
         elif mode_name == "info":
-            from . import __version__
             import json
             
             data_path = Path.home() / ".mnemocli"
@@ -179,16 +176,13 @@ class Session:
 
             header("System Dashboard", "Application State & Metrics")
 
-            # 1. Software Info
             console.print(f"📦 [bold]Version:[/] {__version__}")
             console.print(f"👤 [bold]Author:[/] Gustavo1500")
 
-            # 2. Active Configuration
             console.print(f"\n[bold underline]Active Configuration[/]")
             console.print(f"• [bold]Language:[/] {CONFIG.get('Settings', 'language', fallback='english').capitalize()}")
             console.print(f"• [bold]Default Session:[/] {CONFIG.getint('Settings', 'default_time', fallback=10)} minutes")
             
-            # 3. Statistics Summary
             run_count = 0
             if stats_path.exists():
                 try:
@@ -200,48 +194,48 @@ class Session:
             console.print(f"\n[bold underline]Progress Statistics[/]")
             console.print(f"• [bold]Total Olympic Runs:[/] [green]{run_count}[/]")
 
-            # 4. Storage & Environment
             console.print(f"\n[bold underline]Environment[/]")
             console.print(f"• [bold]Config File:[/] [cyan]{config_path}[/]")
             
             if data_path.exists():
-                size = sum(f.stat().st_size for f in data_path.glob('**/*') if f.is_file())
-                console.print(f"• [bold]Data Directory:[/] [cyan]{data_path}[/]")
-                console.print(f"• [bold]Disk Usage:[/] {size / 1024:.2f} KB")
+                try:
+                    size = sum(f.stat().st_size for f in data_path.rglob('*') if f.is_file())
+                    console.print(f"• [bold]Data Directory:[/] [cyan]{data_path}[/]")
+                    console.print(f"• [bold]Disk Usage:[/] {size / 1024:.2f} KB")
+                except Exception:
+                    console.print("• [bold]Storage Used:[/] Unknown (Permission Error)")
             else:
                 console.print("• [bold]Storage Used:[/] 0 KB (No data yet)")
 
-            # 5. Footer Tip
             console.print(f"\n[dim]Tip: Use 'mnemocli cleanup' to wipe all history and reset settings.[/]")
 
         elif mode_name == "cleanup":
             data_path = Path.home() / ".mnemocli"
             
-            # 1. Existence Check
             if not data_path.exists() or not data_path.is_dir():
                 console.print("[yellow]No data folder found to clean.[/]")
                 return
 
-            # 2. String/Parent Safety Locks
             if data_path.name != ".mnemocli" or Path.home() not in data_path.parents:
                 console.print("[bold red]CRITICAL SAFETY ERROR:[/] Path mismatch. Aborting.")
                 return
 
-            # 3. Gather file info for the preview
-            file_list = list(data_path.rglob("*"))
+            try:
+                file_list = list(data_path.rglob("*"))
+            except Exception as e:
+                console.print(f"[bold red]Cannot access files:[/] {e}")
+                return
+
             files = [f for f in file_list if f.is_file()]
             dirs = [d for d in file_list if d.is_dir()]
 
-            # --- CIRCUIT BREAKER ---
-            MAX_FILES, MAX_DIRS = 50, 10
+            MAX_FILES, MAX_DIRS = 100, 20
             if len(files) > MAX_FILES or len(dirs) > MAX_DIRS:
                 console.print(f"[bold red]CIRCUIT BREAKER TRIGGERED![/]")
                 console.print(f"Target contains too many items ({len(files)} files, {len(dirs)} dirs).")
                 console.print("[red]Aborting. Please delete the folder manually for safety.[/]")
                 return
 
-            # 4. Format the names for display
-            # We show just the file names (e.g., 'olympic_history.json') joined by commas
             file_names = ", ".join([f"[cyan]{f.name}[/]" for f in files]) if files else "[dim]None[/]"
             dir_names = ", ".join([f"[blue]{d.name}[/]" for d in dirs]) if dirs else "[dim]None[/]"
 
@@ -259,8 +253,11 @@ class Session:
                 expand=False
             ))
             
-            # 5. Triple Confirmation
-            confirm = input("\nConfirm (type 'yes'): ").strip()
+            try:
+                confirm = input("\nConfirm (type 'yes'): ").strip()
+            except (KeyboardInterrupt, EOFError):
+                console.print("\n[dim]Deletion aborted.[/]")
+                return
             
             if confirm == "yes":
                 try:
@@ -269,7 +266,7 @@ class Session:
                 except Exception as e:
                     console.print(f"[bold red]OS Error during deletion:[/] {e}")
             else:
-                console.print("[dim]Names did not match. Deletion aborted.[/]")
+                console.print("[dim]Confirmation did not match. Deletion aborted.[/]")
 
         elif mode_name == "olympic":
             clear_screen()
@@ -282,11 +279,15 @@ class Session:
             console.print("  4. [bold magenta]Pro[/]          (400 items)\n")
             
             while True:
-                console.print("[dim]Enter choice (1-4): [/]", end="")
-                choice = input().strip()
-                if choice in ["1", "2", "3", "4"]:
-                    break
-                console.print("[red]Invalid choice. Please enter 1, 2, 3, or 4.[/]")
+                try:
+                    console.print("[dim]Enter choice (1-4): [/]", end="")
+                    choice = input().strip()
+                    if choice in ["1", "2", "3", "4"]:
+                        break
+                    console.print("[red]Invalid choice. Please enter 1, 2, 3, or 4.[/]")
+                except (KeyboardInterrupt, EOFError):
+                    console.print("\n[red]Olympic mode aborted.[/]")
+                    return
             
             settings = {
                 "1": {"amount": 50, "time": 5},
@@ -300,18 +301,15 @@ class Session:
             discipline_label = f"Olympic {discipline.capitalize()}"
             self.get_ready(discipline_label)
 
-            # VARIABLES TO HOLD RESULTS
             actual_time = 0
             correct = 0
             total = 0
 
-            # RUN THE SELECTED GAME AND CAPTURE DATA
             if discipline == "numbers":
                 game = RandomNumbers(amount=config["amount"], total_time=config["time"])
                 game.show_numbers()
                 actual_time = game.timer()
                 correct, total = game.user_input()
-                
             else:
                 game = RandomWords(amount=config["amount"], total_time=config["time"], language=self.language)
                 if game.random_words:
@@ -319,7 +317,6 @@ class Session:
                     actual_time = game.timer()
                     correct, total = game.user_input()
 
-            # SAVE THE OLYMPIC RUN TO HISTORY
             if total > 0:
                 save_olympic_run(
                     discipline=discipline,
@@ -336,10 +333,7 @@ class Session:
 
         self.run_single_mode("normal_run")
 
-        # USE THE MODES DEFINED IN config.ini
         base_modes = self.standard_modes.copy()
-        
-        # Fallback just in case user deleted all modes from config
         if not base_modes:
             base_modes = ["random_drill"] 
             
@@ -352,8 +346,13 @@ class Session:
                 console.print(f"\n[bold red]TIME'S UP![/] ({(elapsed_time / 60):.2f} mins elapsed)")
                 break
 
-            console.print("\n[dim]Continue to next drill? (y/n): [/]", end="")
-            choice = input().strip().lower()
+            try:
+                console.print("\n[dim]Continue to next drill? (y/n): [/]", end="")
+                choice = readchar.readkey().strip().lower()
+                console.print(choice) 
+            except KeyboardInterrupt:
+                break
+
             if choice == "n":
                 break
 

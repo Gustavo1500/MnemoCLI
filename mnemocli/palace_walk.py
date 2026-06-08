@@ -13,7 +13,7 @@ class PalaceWalk:
         elif mode == "odd":
             self.current_loci = 1
             self.step = 2
-        else: # normal
+        else: 
             self.current_loci = 1
             self.step = 1
 
@@ -27,8 +27,12 @@ class PalaceWalk:
         while self.current_loci <= self.loci_amount:
             console.print(f"Loci: [bold cyan]{self.current_loci:02d}[/] [dim](Press any key...)[/]", end="\r")
             
-            key = readchar.readkey()
-            if key in ['\x03', '\x1b']: 
+            try:
+                key = readchar.readkey()
+                if key in ['\x03', '\x1b']: 
+                    console.print("\n[red]Walk aborted.[/]")
+                    return
+            except KeyboardInterrupt:
                 console.print("\n[red]Walk aborted.[/]")
                 return
 
@@ -58,4 +62,7 @@ class PalaceWalk:
             expand=False
         ))
         console.print("[dim]Press any key to continue...[/]")
-        readchar.readkey()
+        try:
+            readchar.readkey()
+        except KeyboardInterrupt:
+            pass

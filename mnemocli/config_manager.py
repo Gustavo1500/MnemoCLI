@@ -8,7 +8,7 @@ CONFIG_FILE = CONFIG_DIR / "config.ini"
 DEFAULT_CONFIG = """[Settings]
 # The language used for Random Words generation.
 # Supported languages: english, portuguese
-language = portuguese
+language = english
 
 # Default time limit in minutes (if not specified via -t in CLI)
 default_time = 10

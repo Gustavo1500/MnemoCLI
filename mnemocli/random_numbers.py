@@ -8,7 +8,7 @@ from rich.panel import Panel
 
 class RandomNumbers:
     def __init__(self, amount=10, total_time=5):
-        self.total_time = 60 * total_time # Convert minutes to seconds
+        self.total_time = 60 * total_time 
         self.numbers = [random.randint(0, 9) for _ in range(amount)]
 
     def show_numbers(self):
@@ -33,19 +33,24 @@ class RandomNumbers:
 
     def timer(self):
         console.print("\n[dim]Press [bold red]Ctrl+C[/] when you are ready to recall.[/dim]")
-        start_timestamp = time.perf_counter() # Local start for this specific timing
+        start_timestamp = time.perf_counter() 
         
         try:
-            for i in range(self.total_time, -1, -1):
-                mins, secs = divmod(i, 60)
-                timer_str = f"{mins:02d}:{secs:02d}"
-                print(f"\rTime remaining: {timer_str}   ", end="", flush=True)
-                time.sleep(1)
+            if self.total_time <= 0:
+                print("\rTake your time. Press Ctrl+C when ready.", end="", flush=True)
+                while True:
+                    time.sleep(1)
+            else:
+                for i in range(self.total_time, -1, -1):
+                    mins, secs = divmod(i, 60)
+                    timer_str = f"{mins:02d}:{secs:02d}"
+                    print(f"\rTime remaining: {timer_str}   ", end="", flush=True)
+                    time.sleep(1)
         except KeyboardInterrupt:
             pass
             
         elapsed = time.perf_counter() - start_timestamp
-        print("\r" + " " * 30 + "\r", end="", flush=True) 
+        print("\r" + " " * 40 + "\r", end="", flush=True) 
         time.sleep(0.2)
         
         return elapsed
@@ -55,7 +60,6 @@ class RandomNumbers:
         ideal_cols = int(math.sqrt(len(self.numbers)))
         num_cols = max(3, (ideal_cols // 3) * 3)
 
-        # 1. Instant Input Loop
         while len(user_answers) < len(self.numbers):
             clear_screen()
             header("Recall Phase", "Type the numbers as fast as you can!")
@@ -80,19 +84,19 @@ class RandomNumbers:
             console.print(Panel(table, title="| Enter Numbers |", expand=False))
             console.print(f"\n[dim]Slot {len(user_answers) + 1}/{len(self.numbers)}[/dim] (Press 'Backspace' to delete, 'Esc' to quit)")
             
-            # readkey() captures a single keystroke instantly without waiting for Enter
-            key = readchar.readkey()
-            
-            if key in ['\x03', '\x1b']: # Ctrl+C or Esc
+            try:
+                key = readchar.readkey()
+            except KeyboardInterrupt:
                 break
-            elif key in ['\x08', '\x7f']: # Backspace (covers both Windows and Mac/Linux)
+            
+            if key in ['\x03', '\x1b']: 
+                break
+            elif key in ['\x08', '\x7f', '\r']: 
                 if user_answers:
                     user_answers.pop()
-            elif key in "0123456789": # Strictly only accept single digits 0-9
+            elif key in "0123456789": 
                 user_answers.append(int(key))
-            # Any other key (letters, symbols, enter) is simply ignored!
 
-        # 2. Final Report Screen
         clear_screen()
         header("Results", "Original vs Your Answers")
         
@@ -104,14 +108,12 @@ class RandomNumbers:
             guess_table.add_column(justify="center")
             
         for i in range(0, len(self.numbers), num_cols):
-            # Populate Original
             chunk = self.numbers[i : i + num_cols]
             styled_row = [f"[bold cyan]{n}[/]" for n in chunk]
             if len(styled_row) < num_cols:
                 styled_row.extend([""] * (num_cols - len(styled_row)))
             orig_table.add_row(*styled_row)
 
-            # Populate Guesses
             row_data = []
             for j in range(i, i + num_cols):
                 if j < len(self.numbers):
@@ -124,7 +126,7 @@ class RandomNumbers:
                         else:
                             row_data.append(f"[bold red]{guess_val}[/]")
                     else:
-                        row_data.append("[dim]-[/]") # Mark un-entered as blank
+                        row_data.append("[dim]-[/]") 
                 else:
                     row_data.append("")
             guess_table.add_row(*row_data)
@@ -136,6 +138,9 @@ class RandomNumbers:
         console.print(f"\n[bold]Done![/bold] Correct: [cyan]{correct}/{len(self.numbers)}[/cyan]\n")
         
         console.print("[dim]Press any key to return...[/]")
-        readchar.readkey()
+        try:
+            readchar.readkey()
+        except KeyboardInterrupt:
+            pass
         
         return correct, len(self.numbers)

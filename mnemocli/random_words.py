@@ -15,15 +15,12 @@ class RandomWords:
         self.language: str = language
         self.random_words = []
 
-        # 1. Load words from your specific folder
         master_words = self.read_json()
         if not master_words:
             console.print(f"[bold red]Failed to load words from languages/{self.language}.json. Exiting.[/]")
             return 
             
         self.amount = min(self.amount, len(master_words))
-
-        # 2. Run the shuffle logic using your specific folder
         self.shuffle_logic(master_words)
 
     def read_json(self):
@@ -31,22 +28,20 @@ class RandomWords:
         filepath = MODULE_ROOT / "languages" / f"{self.language}.json"
         
         if not filepath.exists():
-            # If the file is missing, it creates "word_1" etc. 
-            # Make sure your real file is actually at languages/portuguese.json
             self._create_dummy_json(filepath)
 
         try:
             with open(filepath, mode="r", encoding="utf-8") as f:
-                data: dict = json.load(f)
+                data = json.load(f)
 
             key = f"{self.language}_words"
             if key in data:
                 return data[key]
             else:
-                console.print(f"Invalid format in JSON. Expected key: '{key}'")
+                console.print(f"[bold red]Invalid format in JSON. Expected key: '{key}'[/]")
                 return []
         except Exception as e:
-            console.print(f"Error reading JSON: {e}")
+            console.print(f"[bold red]Error reading JSON:[/] {e}")
             return []
             
     def _create_dummy_json(self, filepath: Path):
@@ -59,7 +54,9 @@ class RandomWords:
         index_dir = Path.home() / ".mnemocli" / "data" / "shuffle_index"
         index_dir.mkdir(parents=True, exist_ok=True) 
         index_shuffle = index_dir / f"shuffle_index_{self.language}.json"
-        master_words = sorted(set(master_words))
+        
+        master_words = sorted(list(set(w.strip().lower() for w in master_words)))
+        
         state = {}
 
         if not index_shuffle.exists():
@@ -67,11 +64,13 @@ class RandomWords:
             random.shuffle(full_deck)
             state = {"index": 0, "words": full_deck}
         else:
-            with open(index_shuffle, mode="r", encoding="utf-8") as f:
-                state = json.load(f)
+            try:
+                with open(index_shuffle, mode="r", encoding="utf-8") as f:
+                    state = json.load(f)
+            except json.JSONDecodeError:
+                state = {"index": 0, "words": []}
             
-            # If the dictionary size changed, reshuffle
-            if len(state["words"]) != len(master_words):
+            if len(state.get("words", [])) != len(master_words):
                 full_deck = master_words.copy()
                 random.shuffle(full_deck)
                 state = {"index": 0, "words": full_deck}
@@ -79,7 +78,6 @@ class RandomWords:
         current_index = state["index"]
         deck = state["words"]
 
-        # If we need more words than are left in the deck, reshuffle and wrap around
         if current_index + self.amount > len(deck):
             remaining_words = deck[current_index:]
             needed_words = self.amount - len(remaining_words)
@@ -87,7 +85,6 @@ class RandomWords:
             new_deck = master_words.copy()
             random.shuffle(new_deck)
 
-            # Prevent the last word of the old deck from being the first of the new deck
             if remaining_words and new_deck[0] == remaining_words[-1]:
                 new_deck[0], new_deck[-1] = new_deck[-1], new_deck[0]
 
@@ -129,16 +126,21 @@ class RandomWords:
         start_timestamp = time.perf_counter()
         
         try:
-            for i in range(self.total_time, -1, -1):
-                mins, secs = divmod(i, 60)
-                timer_str = f"{mins:02d}:{secs:02d}"
-                print(f"\rTime remaining: {timer_str}   ", end="", flush=True)
-                time.sleep(1)
+            if self.total_time <= 0:
+                print("\rTake your time. Press Ctrl+C when ready.", end="", flush=True)
+                while True:
+                    time.sleep(1)
+            else:
+                for i in range(self.total_time, -1, -1):
+                    mins, secs = divmod(i, 60)
+                    timer_str = f"{mins:02d}:{secs:02d}"
+                    print(f"\rTime remaining: {timer_str}   ", end="", flush=True)
+                    time.sleep(1)
         except KeyboardInterrupt:
             pass
             
         elapsed = time.perf_counter() - start_timestamp
-        print("\r" + " " * 30 + "\r", end="", flush=True)
+        print("\r" + " " * 40 + "\r", end="", flush=True)
         time.sleep(0.2)
         
         return elapsed
@@ -148,7 +150,6 @@ class RandomWords:
         ideal_cols = int(math.sqrt(len(self.random_words)))
         num_cols = max(3, (ideal_cols // 3) * 3)
 
-        # 1. Input Loop
         for _ in range(len(self.random_words)):
             clear_screen()
             header("Recall Phase", f"Word {len(user_answers) + 1} of {len(self.random_words)}")
@@ -175,10 +176,9 @@ class RandomWords:
             try:
                 val = input(f"\n > ").strip()
                 user_answers.append(val)
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 break 
 
-        # 2. Final Report Screen
         clear_screen()
         header("Results", "Original vs Your Answers")
         
@@ -190,14 +190,12 @@ class RandomWords:
             guess_table.add_column(justify="center")
             
         for i in range(0, len(self.random_words), num_cols):
-            # Populate Original
             chunk = self.random_words[i : i + num_cols]
             styled_row = [f"[bold cyan]{w}[/]" for w in chunk]
             if len(styled_row) < num_cols:
                 styled_row.extend([""] * (num_cols - len(styled_row)))
             orig_table.add_row(*styled_row)
 
-            # Populate Guesses
             row_data = []
             for j in range(i, i + num_cols):
                 if j < len(self.random_words):
@@ -208,7 +206,7 @@ class RandomWords:
                         if orig_val == guess_val:
                             row_data.append(f"[bold green]{user_answers[j]}[/]")
                         else:
-                            row_data.append(f"[bold red]{user_answers[j]}[/]")
+                            row_data.append(f"[bold red]{user_answers[j] if user_answers[j] else '(blank)'}[/]")
                     else:
                         row_data.append("[dim]-[/]")
                 else:
@@ -222,6 +220,9 @@ class RandomWords:
         console.print(f"\n[bold]Done![/bold] Correct: [cyan]{correct}/{len(self.random_words)}[/cyan]\n")
         
         console.print("[dim]Press any key to return...[/]")
-        readchar.readkey()
+        try:
+            readchar.readkey()
+        except KeyboardInterrupt:
+            pass
         
         return correct, len(self.random_words)

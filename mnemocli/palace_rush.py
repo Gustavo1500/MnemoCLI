@@ -7,18 +7,17 @@ from .ui import console, clear_screen, header
 
 class PalaceRush:
     def __init__(self, loci_amount, time_per_loci=2, reverse=False):
-        self.time_per_loci = time_per_loci
+        self.time_per_loci = max(0.1, time_per_loci)
         self.loci_amount = loci_amount
         self.reverse = reverse
         self.current_loci = loci_amount if reverse else 1
         self.time_log = {}
-        self.console = console
 
     def run(self):
         clear_screen()
         header("Palace Rush", "Recall every station as fast as possible")
 
-        self.console.print(Panel(f"[bold cyan]Palace Rush Started[/bold cyan]\nLoci: {self.loci_amount} | Target: {self.time_per_loci}s", expand=False))
+        console.print(Panel(f"[bold cyan]Palace Rush Started[/bold cyan]\nLoci: {self.loci_amount} | Target: {self.time_per_loci}s", expand=False))
         
         try:
             while True:
@@ -29,29 +28,27 @@ class PalaceRush:
 
                 self.process_loci()
         except KeyboardInterrupt:
-            self.console.print("\n[bold red]Session Interrupted.[/bold red]")
+            console.print("\n[bold red]Session Interrupted.[/bold red]")
         
         if self.time_log:
             self.report()
 
     def process_loci(self):
-        # Display current Loci
         print(f"\rLoci: {self.current_loci:02d} | Press any key...", end="", flush=True)
         
         start_time = time.perf_counter()
         key = readchar.readkey()
         
-        if key in ['\x03', '\x1b']: # Ctrl+C or Esc
+        if key in ['\x03', '\x1b']: 
             raise KeyboardInterrupt
 
         total_time = time.perf_counter() - start_time
         self.time_log[self.current_loci] = total_time
         
-        # Determine color for the live feedback
         ratio = total_time / self.time_per_loci
         color = "green" if ratio < 0.7 else "yellow" if ratio <= 1.1 else "red"
         
-        self.console.print(f"\rLoci: {self.current_loci:02d} - [{color}]{total_time:.2f}s[/]        ")
+        console.print(f"\rLoci: {self.current_loci:02d} - [{color}]{total_time:.2f}s[/]        ")
 
         if not self.reverse:
             self.current_loci += 1
@@ -59,12 +56,11 @@ class PalaceRush:
             self.current_loci -= 1
 
     def report(self):
-        self.console.print("\n")
-        self.console.print(Panel.fit("[bold white]PALACE RUSH PERFORMANCE REPORT[/]", border_style="magenta"))
+        console.print("\n")
+        console.print(Panel.fit("[bold white]PALACE RUSH PERFORMANCE REPORT[/]", border_style="magenta"))
 
-        # 1. HEATMAP GRID
         heatmap_table = Table(title="Loci Heatmap", show_header=False, padding=(0, 1))
-        for _ in range(5): # Create 5 columns
+        for _ in range(5): 
             heatmap_table.add_column()
 
         current_row = []
@@ -87,18 +83,15 @@ class PalaceRush:
                 heatmap_table.add_row(*current_row)
                 current_row = []
         
-        # Add remaining if not a perfect multiple of 5
         if current_row:
             while len(current_row) < 5:
                 current_row.append("")
             heatmap_table.add_row(*current_row)
 
-        self.console.print(heatmap_table)
+        console.print(heatmap_table)
 
-        # 2. TOP 5 WORST LOCI (The "Bottlenecks")
-        self.console.print("\n[bold red]Top 5 Bottlenecks (Slowest Loci):[/]")
+        console.print("\n[bold red]Top 5 Bottlenecks (Slowest Loci):[/]")
         
-        # Sort by time descending
         worst_loci = sorted(self.time_log.items(), key=lambda x: x[1], reverse=True)[:5]
         
         worst_table = Table(show_header=True, header_style="bold magenta")
@@ -117,12 +110,11 @@ class PalaceRush:
                 f"[red]{diff_str}[/]" if diff > 0 else f"[green]{diff_str}[/]"
             )
         
-        self.console.print(worst_table)
+        console.print(worst_table)
 
-        # 3. SUMMARY
         avg_time = sum(self.time_log.values()) / len(self.time_log)
-        self.console.print(f"\n[bold]Average Time:[/] {avg_time:.2f}s | [bold]Target:[/] {self.time_per_loci}s")
-        self.console.print("-" * 30)
+        console.print(f"\n[bold]Average Time:[/] {avg_time:.2f}s | [bold]Target:[/] {self.time_per_loci}s")
+        console.print("-" * 30)
 
 # Run the app
 if __name__ == "__main__":
