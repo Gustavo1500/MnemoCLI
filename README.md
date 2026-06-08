@@ -1,6 +1,6 @@
 # 🏛️ MnemoCLI 🏛️
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![PyPI version](https://badge.fury.io/py/mnemocli-loci.svg)](https://badge.fury.io/py/mnemocli-loci)
+[![PyPI version](https://img.shields.io/pypi/v/mnemocli-loci.svg)](https://pypi.org/project/mnemocli-loci/)
 
 **MnemoCLI** is a minimalist, high-performance command-line mental gymnasium designed to help you master the **Method of Loci** (Memory Palaces). 
 
@@ -15,7 +15,7 @@ MnemoCLI requires **Python 3.10+**.
 ### Option A: Stable Release (Recommended)
 Install the latest verified version directly from PyPI:
 ```bash
-pip install mnemocli
+pip install mnemocli-loci
 ```
 
 ### Option B: Bleeding Edge (Development)
@@ -27,7 +27,7 @@ pip install git+https://github.com/Gustavo1500/mnemocli.git
 ### 🔄 How to Update
 | Method | Command to Update | Description |
 | :--- | :--- | :--- |
-| **PyPI** | `pip install -U mnemocli` | Updates to the latest **stable** version. |
+| **PyPI** | `pip install -U mnemocli-loci` | Updates to the latest **stable** version. |
 | **GitHub** | `pip install --force-reinstall git+https://github.com/Gustavo1500/mnemocli.git` | Pulls the latest **commit** from the main branch. |
 
 **Note for Linux/macOS users:** If you encounter a "break-system-packages" error, it is recommended to install via `pipx install mnemocli` or use a Python Virtual Environment.
@@ -141,6 +141,8 @@ See the [LICENSE](LICENSE) file for the full legal text.
 
 MnemoCLI is built on the belief that a better memory leads to a more organized and creative life. This tool is for everyone—from the casual hobbyist to the competitive pro. 
 
-If you find a bug, have a feature request, or want to contribute a more curated dictionary for any language, please open an issue or submit a pull request.
+**Want to help?** We welcome word-list updates, bug fixes, and new training modes! Please read our [**Contributing Guidelines**](CONTRIBUTING.md) to get started.
+
+If you find a bug or have a feature request, please [open an issue](https://github.com/Gustavo1500/mnemocli/issues).
 
 **I have built this tool to help me master the Method of Loci, and I hope it can help you too. All feedback and contributions are greatly appreciated!**
