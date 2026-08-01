@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mnemocli-loci"
-version = "1.0.5"
+version = "1.0.6"
 authors = [
   { name="Gustavo1500", email="gugamr2@gmail.com" },
 ]
