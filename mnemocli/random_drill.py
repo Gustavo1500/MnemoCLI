@@ -63,8 +63,12 @@ class RandomDrill:
         target_str = f"{self.time_limit}s" if self.time_limit > 0 else "None"
         header("Drill Heatmap Report", f"Target Time: {target_str}")
         
-        table = Table(show_header=False, padding=(0, 1), box=None, show_edge=False)
-        for _ in range(5): 
+        # Calculate dynamic columns based on terminal width
+        width = console.width
+        num_cols = max(2, width // 15)
+        
+        table = Table(show_header=False, padding=(0, 1), box=None, show_edge=False, expand=True)
+        for _ in range(num_cols): 
             table.add_column(justify="center")
 
         current_row = []
@@ -81,12 +85,12 @@ class RandomDrill:
 
             current_row.append(Panel(f"[white]#{i:02d}[/]\n[{style}]{text}[/]", expand=True))
 
-            if len(current_row) == 5:
+            if len(current_row) == num_cols:
                 table.add_row(*current_row)
                 current_row = []
         
         if current_row:
-            while len(current_row) < 5:
+            while len(current_row) < num_cols:
                 current_row.append("") 
             table.add_row(*current_row)
                 

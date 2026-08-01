@@ -5,6 +5,7 @@ import readchar
 from .ui import console, clear_screen, header
 from rich.table import Table
 from rich.panel import Panel
+from rich.live import Live
 
 class RandomNumbers:
     def __init__(self, amount=10, total_time=5):
@@ -60,10 +61,10 @@ class RandomNumbers:
         ideal_cols = int(math.sqrt(len(self.numbers)))
         num_cols = max(3, (ideal_cols // 3) * 3)
 
-        while len(user_answers) < len(self.numbers):
-            clear_screen()
-            header("Recall Phase", "Type the numbers as fast as you can!")
-            
+        clear_screen()
+        header("Recall Phase", "Type the numbers as fast as you can!")
+        
+        def get_renderable():
             table = Table(show_header=False, box=None, padding=(0, 2))
             for _ in range(num_cols):
                 table.add_column(justify="center")
@@ -81,21 +82,26 @@ class RandomNumbers:
                         row_data.append("")
                 table.add_row(*row_data)
 
-            console.print(Panel(table, title="| Enter Numbers |", expand=False))
-            console.print(f"\n[dim]Slot {len(user_answers) + 1}/{len(self.numbers)}[/dim] (Press 'Backspace' to delete, 'Esc' to quit)")
-            
-            try:
-                key = readchar.readkey()
-            except KeyboardInterrupt:
-                break
-            
-            if key in ['\x03', '\x1b']: 
-                break
-            elif key in ['\x08', '\x7f', '\r']: 
-                if user_answers:
-                    user_answers.pop()
-            elif key in "0123456789": 
-                user_answers.append(int(key))
+            return Panel(table, title="| Enter Numbers |", expand=False, subtitle=f"[dim]Slot {len(user_answers) + 1}/{len(self.numbers)}[/dim]")
+
+        with Live(get_renderable(), console=console, refresh_per_second=10) as live:
+            while len(user_answers) < len(self.numbers):
+                try:
+                    key = readchar.readkey()
+                except KeyboardInterrupt:
+                    break
+                
+                if key in ['\x03', '\x1b']: 
+                    break
+                elif key in ['\x08', '\x7f']: 
+                    if user_answers:
+                        user_answers.pop()
+                elif key == '\r':
+                    pass
+                elif key in "0123456789": 
+                    user_answers.append(int(key))
+                
+                live.update(get_renderable())
 
         clear_screen()
         header("Results", "Original vs Your Answers")

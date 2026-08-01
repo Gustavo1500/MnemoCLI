@@ -14,7 +14,7 @@ from .random_words import RandomWords
 from .palace_rush import PalaceRush
 from .palace_walk import PalaceWalk
 from .middle_out import MiddleOut
-from .ui import console, clear_screen, header, Panel
+from .ui import console, clear_screen, header, Panel, select_option
 
 from .config_manager import load_config
 from .stats_manager import save_olympic_run, show_history_table
@@ -25,7 +25,7 @@ CONFIG = load_config()
 def parse_args():
     parser = argparse.ArgumentParser(description="Memory Palace Training CLI")
 
-    parser.add_argument("mode", choices=[
+    parser.add_argument("mode", nargs="?", choices=[
         "standard", "random_drill", "olympic", "palace_rush",
         "palace_rush_reverse", "random_numbers", "random_words",
         "even_run", "odd_run", "normal_run", "history", "graph",
@@ -272,30 +272,24 @@ class Session:
             clear_screen()
             header("Olympic Mode", "Standard memory competition events")
             
-            console.print("Select your difficulty:\n")
-            console.print("  1. [bold green]Beginner[/]     (50 items)")
-            console.print("  2. [bold yellow]Intermediate[/] (100 items)")
-            console.print("  3. [bold red]Advanced[/]     (200 items)")
-            console.print("  4. [bold magenta]Pro[/]          (400 items)\n")
+            options = [
+                "[bold green]Beginner[/]     (50 items)",
+                "[bold yellow]Intermediate[/] (100 items)",
+                "[bold red]Advanced[/]     (200 items)",
+                "[bold magenta]Pro[/]          (400 items)"
+            ]
             
-            while True:
-                try:
-                    console.print("[dim]Enter choice (1-4): [/]", end="")
-                    choice = input().strip()
-                    if choice in ["1", "2", "3", "4"]:
-                        break
-                    console.print("[red]Invalid choice. Please enter 1, 2, 3, or 4.[/]")
-                except (KeyboardInterrupt, EOFError):
-                    console.print("\n[red]Olympic mode aborted.[/]")
-                    return
-            
-            settings = {
-                "1": {"amount": 50, "time": 5},
-                "2": {"amount": 100, "time": 5},
-                "3": {"amount": 200, "time": 5},
-                "4": {"amount": 400, "time": 5}
-            }
-            config = settings[choice]
+            choice_idx = select_option(options, "Select your difficulty")
+            if choice_idx is None:
+                return
+
+            settings = [
+                {"amount": 50, "time": 5},
+                {"amount": 100, "time": 5},
+                {"amount": 200, "time": 5},
+                {"amount": 400, "time": 5}
+            ]
+            config = settings[choice_idx]
 
             discipline = random.choice(["numbers", "words"])
             discipline_label = f"Olympic {discipline.capitalize()}"
@@ -347,13 +341,15 @@ class Session:
                 break
 
             try:
-                console.print("\n[dim]Continue to next drill? (y/n): [/]", end="")
-                choice = readchar.readkey().strip().lower()
-                console.print(choice) 
+                console.print("\n[bold cyan]Next drill is ready.[/] [dim]Press 'Y' to continue, 'N' to end session...[/]")
+                while True:
+                    choice = readchar.readkey().strip().lower()
+                    if choice in ['y', 'n', '\x1b', '\x03']:
+                        break
             except KeyboardInterrupt:
                 break
 
-            if choice == "n":
+            if choice in ["n", "\x1b", "\x03"]:
                 break
 
             if not modes:
@@ -379,20 +375,97 @@ class Session:
         ))
 
 
+def interactive_menu():
+    """Launches an interactive menu to select the mode and parameters."""
+    clear_screen()
+    header("MnemoCLI", "Memory Palace Training Suite")
+    
+    modes = [
+        ("Standard Session", "standard"),
+        ("Olympic Competition", "olympic"),
+        ("Random Number Drill", "random_numbers"),
+        ("Random Word Drill", "random_words"),
+        ("Palace Walk (Normal)", "normal_run"),
+        ("Palace Walk (Even)", "even_run"),
+        ("Palace Walk (Odd)", "odd_run"),
+        ("Random Station Drill", "random_drill"),
+        ("Palace Rush (Forward)", "palace_rush"),
+        ("Palace Rush (Reverse)", "palace_rush_reverse"),
+        ("Middle-Out Expansion", "middle_out"),
+        ("View Olympic History", "history"),
+        ("Performance Graph", "graph"),
+        ("System Info", "info"),
+        ("Exit", "exit")
+    ]
+
+    labels = [m[0] for m in modes]
+    choice_idx = select_option(labels, "Select a mode to begin")
+    
+    if choice_idx is None or modes[choice_idx][1] == "exit":
+        console.print("[yellow]Goodbye![/]")
+        return None
+
+    selected_mode = modes[choice_idx][1]
+    
+    # Modes that require parameters
+    palace_modes = ["standard", "normal_run", "even_run", "odd_run", "random_drill", "palace_rush", "palace_rush_reverse", "middle_out"]
+    item_modes = ["random_numbers", "random_words"]
+    
+    loci_amount = None
+    amount = None
+    time_limit = CONFIG.getint("Settings", "default_time", fallback=10)
+
+    if selected_mode in palace_modes:
+        console.print(f"\n[bold cyan]Loci Amount:[/] [dim](Default: 20)[/]")
+        try:
+            val = input(" > ").strip()
+            loci_amount = int(val) if val else 20
+        except ValueError:
+            loci_amount = 20
+
+    if selected_mode in item_modes:
+        console.print(f"\n[bold cyan]Amount of Items:[/] [dim](Default: 20)[/]")
+        try:
+            val = input(" > ").strip()
+            amount = int(val) if val else 20
+        except ValueError:
+            amount = 20
+        
+        console.print(f"\n[bold cyan]Time Limit (minutes):[/] [dim](Default: {time_limit})[/]")
+        try:
+            val = input(" > ").strip()
+            time_limit = int(val) if val else time_limit
+        except ValueError:
+            pass
+
+    return selected_mode, loci_amount, amount, time_limit
+
+
 def main():
     try:
         request = parse_args()
         
+        if request.mode is None:
+            menu_result = interactive_menu()
+            if menu_result is None:
+                return
+            mode, loci_amount, amount, time_limit = menu_result
+        else:
+            mode = request.mode
+            loci_amount = request.loci_amount
+            amount = request.amount
+            time_limit = request.time
+
         session = Session(
-            loci_amount=request.loci_amount,
-            item_amount=request.amount, 
-            time_limit=request.time
+            loci_amount=loci_amount,
+            item_amount=amount, 
+            time_limit=time_limit
         )
 
-        if request.mode == "standard":
+        if mode == "standard":
             session.standard_mode()
         else:
-            session.run_single_mode(request.mode)
+            session.run_single_mode(mode)
             
     except KeyboardInterrupt:
         print("\n\nSession terminated by user. Goodbye!")

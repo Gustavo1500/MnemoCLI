@@ -7,6 +7,8 @@ from pathlib import Path
 from .ui import console, clear_screen, header
 from rich.table import Table
 from rich.panel import Panel
+from rich.live import Live
+from rich.text import Text
 
 class RandomWords:
     def __init__(self, amount=100, total_time=5, language="portuguese"):
@@ -147,13 +149,14 @@ class RandomWords:
     
     def user_input(self):
         user_answers = []
+        current_word_buffer = ""
         ideal_cols = int(math.sqrt(len(self.random_words)))
         num_cols = max(3, (ideal_cols // 3) * 3)
 
-        for _ in range(len(self.random_words)):
-            clear_screen()
-            header("Recall Phase", f"Word {len(user_answers) + 1} of {len(self.random_words)}")
-            
+        clear_screen()
+        header("Recall Phase", "Type the words as fast as you can!")
+
+        def get_renderable():
             table = Table(show_header=False, box=None, padding=(0, 2))
             for _ in range(num_cols):
                 table.add_column(justify="center")
@@ -164,20 +167,44 @@ class RandomWords:
                     if j < len(user_answers):
                         row_data.append(f"[bold cyan]{user_answers[j]}[/]")
                     elif j == len(user_answers):
-                        row_data.append("[bold yellow underline]?[/]")
+                        # Show current typing word
+                        display_text = current_word_buffer if current_word_buffer else "?"
+                        row_data.append(f"[bold yellow underline]{display_text}[/]")
                     elif j < len(self.random_words):
                         row_data.append("[dim white].[/]")
                     else:
                         row_data.append("")
                 table.add_row(*row_data)
 
-            console.print(Panel(table, title="| Enter Words |", expand=False))
-            
-            try:
-                val = input(f"\n > ").strip()
-                user_answers.append(val)
-            except (KeyboardInterrupt, EOFError):
-                break 
+            return Panel(
+                table, 
+                title="| Enter Words |", 
+                expand=False, 
+                subtitle=f"[dim]Word {len(user_answers) + 1} of {len(self.random_words)}[/dim]"
+            )
+
+        with Live(get_renderable(), console=console, refresh_per_second=10) as live:
+            while len(user_answers) < len(self.random_words):
+                try:
+                    key = readchar.readkey()
+                except (KeyboardInterrupt, EOFError):
+                    break
+                
+                if key in ['\x03', '\x1b']: # Ctrl+C or Esc
+                    break
+                elif key in ['\x08', '\x7f']: # Backspace
+                    if current_word_buffer:
+                        current_word_buffer = current_word_buffer[:-1]
+                    elif user_answers:
+                        # Back-navigation: Edit previous word
+                        current_word_buffer = user_answers.pop()
+                elif key == '\r': # Enter
+                    user_answers.append(current_word_buffer.strip())
+                    current_word_buffer = ""
+                elif len(key) == 1 and key.isprintable():
+                    current_word_buffer += key
+                
+                live.update(get_renderable())
 
         clear_screen()
         header("Results", "Original vs Your Answers")

@@ -59,8 +59,12 @@ class PalaceRush:
         console.print("\n")
         console.print(Panel.fit("[bold white]PALACE RUSH PERFORMANCE REPORT[/]", border_style="magenta"))
 
+        # Dynamic columns based on width
+        width = console.width
+        num_cols = max(5, width // 8)
+
         heatmap_table = Table(title="Loci Heatmap", show_header=False, padding=(0, 1))
-        for _ in range(5): 
+        for _ in range(num_cols): 
             heatmap_table.add_column()
 
         current_row = []
@@ -79,12 +83,12 @@ class PalaceRush:
             
             current_row.append(Text(f" {loci:02d} ", style=style))
             
-            if len(current_row) == 5:
+            if len(current_row) == num_cols:
                 heatmap_table.add_row(*current_row)
                 current_row = []
         
         if current_row:
-            while len(current_row) < 5:
+            while len(current_row) < num_cols:
                 current_row.append("")
             heatmap_table.add_row(*current_row)
 
@@ -116,7 +120,6 @@ class PalaceRush:
         console.print(f"\n[bold]Average Time:[/] {avg_time:.2f}s | [bold]Target:[/] {self.time_per_loci}s")
         console.print("-" * 30)
 
-# Run the app
 if __name__ == "__main__":
     run = PalaceRush(loci_amount=25, reverse=True)
     run.run()
